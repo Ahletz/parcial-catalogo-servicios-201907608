@@ -21,7 +21,7 @@ no completa un P; los nuevos escenarios comprueban peticiones HTTP.
 | I01–I08 | imports/services y comando import_catalog | 12/46, repetición, SE.12/NULL, filas 42/67, opciones, trazabilidad y divergencias probados; P06–P08 aprobadas. |
 | IA01/IA02 | AGENTS V3, CONTEXTO_V2/V3 | Dos actualizaciones por hallazgos reales; V1 histórico. |
 | IA03/IA04 | P01_ANALISIS/P02_MODELO/P03_IMPORTACION/P04_AUTENTICACION_FUNCIONAL y dos revisiones | Cuatro temas y dos mejoras reales comprobadas; quinto tema y metadatos exactos pendientes. |
-| H01/H02/H04 | verify-funcional.sh y probe_funcional.py, además de harness previo | Pruebas dirigidas, suite completa y HTTP/CLI reales en BD test_; P12 pendiente. |
+| H01/H02/H04 | verify-funcional.sh, verify-web-local.sh y probe_funcional.py, además de harness previo | Pruebas dirigidas, suite completa y HTTP/CLI reales en BD test_; puerto local verificado, P12 pendiente. |
 | D01/D02/D03 | Dockerfile.modelos, compose.modelos.yaml, requirements | Entorno mínimo Python/PostgreSQL reproducible; despliegue final/P12 pendientes. |
 | I08/H03 | scripts/check_sources.py y mounts ro | Originales solo lectura y hashes verificados antes/después; P06 aprobada. |
 

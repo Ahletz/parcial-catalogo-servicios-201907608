@@ -64,6 +64,7 @@ con los mismos archivos/variables. Este procedimiento aún no constituye P12.
 
 ~~~bash
 bash scripts/verify-funcional.sh
+bash scripts/verify-web-local.sh
 ~~~
 
 El script fuerza .env.example pública, sin leer .env reales; construye, migra,
@@ -79,6 +80,10 @@ escrituras y cookie tras logout. Sus credenciales sintéticas son efímeras y no
 se imprimen. Base y volumen se conservan; ninguna prueba escribe en catalogo_modelos.
 Las pruebas Django usan test_catalogo_modelos y rollback. La UI de revisión
 local utiliza catalogo_modelos; no es la base de los tests.
+verify-web-local comprueba el perfil publicado desde el anfitrión Docker:
+login/CSS 200 y acceso anónimo 302, sin imprimir tokens ni modificar registros.
+Solo web participa además en una red de interfaz para publicar localhost:8000;
+PostgreSQL y el runner de pruebas conservan la red interna.
 
 Pruebas de modelo/importación anteriores, si se necesitan por cambios en esas capas:
 

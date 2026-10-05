@@ -158,6 +158,15 @@ Concretar D20: ante rechazo, logout si hay usuario autenticado o SESSION_KEY
 residual. Evita restaurar esa sesión al reactivar; no modifica modelo/backend.
 Guarda accounts/access.py y regresión HTTP; revisión P04_REVISION_SESIONES.
 
+Hallazgo operativo D25: Gunicorn escuchaba en 0.0.0.0:8000, pero el puerto
+efectivo estaba vacío (docker port sin salida y NetworkSettings.Ports={}).
+El perfil heredaba exclusivamente la red internal de las pruebas. Añadir
+una red bridge de interfaz solo a web, manteniendo modelos/db en su red
+internal y publicación limitada a 127.0.0.1:8000. No cambia Django ni datos.
+Control dirigido adicional desde la red del anfitrión Docker para cubrir el
+puerto publicado; no repetir la suite de Django sin cambios en src/tests.
+Referencia: [red internal](https://docs.docker.com/reference/cli/docker/network/create/#network-internal-mode---internal).
+
 ## Pendientes de entrega y evidencia
 
 ### Hallazgo real de pruebas: obligatoriedad heredada (resuelto)

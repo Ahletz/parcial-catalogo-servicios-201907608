@@ -184,6 +184,7 @@ docker compose -f compose.modelos.yaml run --rm modelos python manage.py makemig
 docker compose -f compose.modelos.yaml run --rm modelos python manage.py test tests.test_models --keepdb --verbosity 2
 bash scripts/verify-importacion.sh
 bash scripts/verify-funcional.sh
+bash scripts/verify-web-local.sh
 docker compose -f compose.modelos.yaml run --rm modelos python manage.py import_catalog --file /app/data/CatalogoServicios.xlsx
 docker compose -f compose.modelos.yaml stop
 ~~~
@@ -199,6 +200,9 @@ verify-funcional fuerza .env.example pública, ejecuta 39 pruebas dirigidas y
 UNA suite completa de 165. probe_funcional crea nueva BD test_, importa/seed
 dos veces y prueba HTTP real sin imprimir credenciales/cookies. Se conservan bases.
 El perfil funcional y configuración local de demo están documentados en README.
+web conecta además a una red bridge de interfaz para el puerto local; db/modelos
+solo siguen en la red internal. verify-web-local comprueba publicación y redirección
+desde el anfitrión Docker, sin leer ni imprimir tokens ni datos privados.
 
 Contrato FUTURO del despliegue final; todavía no existen compose.yaml, init,
 verify.sh ni verify-persistence.sh. import_catalog y seed_demo ya existen.
