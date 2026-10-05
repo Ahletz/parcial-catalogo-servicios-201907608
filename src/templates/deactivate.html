@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>{{ title }}</h1>
+<div class="panel editor">
+  <p>¿Desactivar <strong>{{ object }}</strong>?</p>
+  <p>Se conservará la información histórica. Las dependencias activas deben resolverse primero.</p>
+  {% for error in errors %}<p class="error" role="alert">{{ error }}</p>{% endfor %}
+  <form method="post">{% csrf_token %}
+    <div class="actions"><button type="submit">Confirmar desactivación</button><a href="{% url 'entity-list' entity=entity %}">Cancelar</a></div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block title %}Iniciar sesión · Catálogo{% endblock %}
+{% block content %}
+<section class="login panel">
+  <h1>Iniciar sesión</h1>
+  <p>Ingresa con tu usuario o correo registrado.</p>
+  <form method="post">{% csrf_token %}
+    {{ form.as_p }}
+    <input type="hidden" name="next" value="{{ next }}">
+    <button type="submit">Ingresar</button>
+  </form>
+</section>
+{% endblock %}

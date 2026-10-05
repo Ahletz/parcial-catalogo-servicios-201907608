@@ -28,6 +28,10 @@ services:
       DB_HOST: db
       DB_PORT: "5432"
       DB_TEST_NAME: test_catalogo_modelos
+      DEMO_ADMIN_IDENTIFICADOR: ${DEMO_ADMIN_IDENTIFICADOR:-admin.demo}
+      DEMO_ADMIN_PASSWORD: ${DEMO_ADMIN_PASSWORD:-CONFIGURAR_LOCALMENTE}
+      DEMO_CONSULTA_IDENTIFICADOR: ${DEMO_CONSULTA_IDENTIFICADOR:-consulta.demo}
+      DEMO_CONSULTA_PASSWORD: ${DEMO_CONSULTA_PASSWORD:-CONFIGURAR_LOCALMENTE}
     volumes:
       - ./src:/app/src
       - ./tests:/app/tests:ro
@@ -39,6 +43,15 @@ services:
     depends_on:
       db:
         condition: service_healthy
+  web:
+    extends:
+      service: modelos
+    profiles: [funcional]
+    command: ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "1"]
+    environment:
+      DJANGO_DEBUG: "true"
+    ports:
+      - "127.0.0.1:8000:8000"
 networks:
   modelos:
     internal: true

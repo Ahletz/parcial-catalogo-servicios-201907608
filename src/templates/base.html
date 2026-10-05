@@ -1,0 +1,34 @@
+{% load static %}
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Catálogo de servicios{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'app.css' %}">
+</head>
+<body>
+  <header>
+    <a class="brand" href="{% url 'home' %}">Catálogo de servicios</a>
+    {% if user.is_authenticated %}
+    <div class="identity">{{ user.nombre }} <span class="badge">{{ user.get_rol_display }}</span></div>
+    <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="secondary" type="submit">Cerrar sesión</button></form>
+    {% endif %}
+  </header>
+  {% if user.is_authenticated %}
+  <nav aria-label="Navegación principal">
+    <a href="{% url 'home' %}">Inicio</a>
+    <a href="{% url 'entity-list' entity='servicios' %}">Servicios</a>
+    <a href="{% url 'entity-list' entity='nivel1' %}">Nivel 1</a>
+    <a href="{% url 'organization' %}">Organización</a>
+    <a href="{% url 'entity-list' entity='usuarios' %}">Usuarios</a>
+    <a href="{% url 'classifications' %}">Clasificaciones</a>
+  </nav>
+  {% endif %}
+  <main>
+    {% for message in messages %}<p class="notice" role="status">{{ message }}</p>{% endfor %}
+    {% block content %}{% endblock %}
+  </main>
+  <footer>Software Avanzado · Catálogo, organización y responsables</footer>
+</body>
+</html>

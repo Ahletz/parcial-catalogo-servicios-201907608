@@ -10,3 +10,10 @@ test_name = os.environ.get("DB_TEST_NAME", "test_catalogo_modelos")
 if not test_name.startswith("test_") or test_name == DATABASES["default"]["NAME"]:
     raise ImproperlyConfigured("La base de pruebas debe tener nombre test_ independiente.")
 DATABASES["default"]["TEST"] = {"NAME": test_name}
+# Las plantillas HTTP de pruebas usan archivos locales sin exigir collectstatic.
+# El despliegue funcional final conserva almacenamiento con manifiesto.
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+}
+WHITENOISE_USE_FINDERS = True

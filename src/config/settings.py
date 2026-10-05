@@ -79,6 +79,9 @@ AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
 ]
 SESSION_ENGINE = "django.contrib.sessions.backends.db"
+LOGIN_URL = "login"
+LOGIN_REDIRECT_URL = "home"
+LOGOUT_REDIRECT_URL = "login"
 SESSION_COOKIE_AGE = 7200
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = "Lax"
@@ -90,6 +93,7 @@ USE_I18N = True
 USE_TZ = True
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 STATIC_URL = "/static/"
+STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR.parent / "staticfiles"
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},

@@ -1,11 +1,11 @@
-# Catálogo de servicios — modelos e importación
+# Catálogo de servicios — aplicación funcional
 
 Proyecto individual de Software Avanzado. Nombre/carné del integrante:
 pendientes de confirmar para la entrega. Contexto inicial: f5f39e3.
 
-Estado actual: base Django, usuario personalizado, organización, catálogo,
-procedencia e importador modular idempotente. P06/P07/P08 automatizadas y
-aprobadas; P01–P05/P09–P12 pendientes. No hay interfaz, login/logout ni demo.
+Estado actual: login/logout local, roles en servidor, mantenimientos de
+organización/usuarios/N1/N2/clasificaciones, filtros/paginación, ficha completa,
+responsables, importador y demo idempotente. P01–P11 automatizadas; P12 pendiente.
 Este entorno no sustituye el
 despliegue final requerido con docker compose up --build -d.
 
@@ -14,6 +14,73 @@ despliegue final requerido con docker compose up --build -d.
 Requisitos del anfitrión: Docker Engine y Docker Compose V2; Bash para el script.
 Verificado con Engine 28.3.3 y Compose 2.39.1. No necesita Python, Django,
 PostgreSQL ni dependencias instalados fuera de contenedores.
+
+## Revisar la aplicación local
+
+Copiar .env.example a .env y configurar localmente DEMO_ADMIN_PASSWORD y
+DEMO_CONSULTA_PASSWORD con contraseñas de demostración distintas y no triviales.
+Los identificadores predeterminados son admin.demo y consulta.demo; se pueden
+cambiar mediante DEMO_ADMIN_IDENTIFICADOR/DEMO_CONSULTA_IDENTIFICADOR.
+Nunca versionar .env. Esta vista usa el Compose interno y datos de demostración;
+el despliegue final con configuración propia y P12 corresponde al cierre.
+
+~~~bash
+docker compose --env-file .env -f compose.modelos.yaml build modelos
+docker compose --env-file .env -f compose.modelos.yaml up -d db
+docker compose --env-file .env -f compose.modelos.yaml run --rm modelos python manage.py migrate --noinput
+docker compose --env-file .env -f compose.modelos.yaml run --rm modelos python manage.py import_catalog --file /app/data/CatalogoServicios.xlsx
+docker compose --env-file .env -f compose.modelos.yaml run --rm modelos python manage.py seed_demo
+docker compose --env-file .env -f compose.modelos.yaml --profile funcional up --build -d web
+~~~
+
+URL: http://localhost:8000/login/. Entrar con cada identificador y la contraseña
+configurada localmente. ADMINISTRADOR puede crear/editar/desactivar; CONSULTA
+solo lee. Usuario y rol aparecen en la cabecera. Logout es POST con CSRF;
+sesiones previas de inactivos se invalidan al intentar acceso protegido.
+
+La organización mantiene Empresa → Área → Departamento → Sección → Puesto →
+Usuario. Los formularios no permiten huérfanos ni padres inactivos; las bajas
+bloquean dependencias activas/desconocidas y conservan información histórica.
+Servicios permite código/nombre, N1/estado/clase/criticidad/tipo y paginación de
+20 registros. Estado desconocido es distinto de inactivo. La ficha muestra
+todos los atributos; los responsables se editan en el formulario del servicio.
+
+seed_demo crea cinco unidades y dos roles, y asigna tres importados disponibles.
+Repetirlo no rota contraseñas, no sobrescribe asignaciones ni reactiva bajas.
+Si faltan importados sin asignación, falla con rollback e indica importar primero.
+Una cuenta demo existente con otro rol/puesto/estado requiere revisión explícita.
+Para cambiar una contraseña existente, editar el usuario como administrador o
+usar el comando Django changepassword; dejarla vacía en edición la conserva.
+
+~~~bash
+docker compose --env-file .env -f compose.modelos.yaml logs web db
+docker compose --env-file .env -f compose.modelos.yaml --profile funcional stop
+~~~
+
+Para iniciar de nuevo sin borrar datos: up -d db y --profile funcional up -d web
+con los mismos archivos/variables. Este procedimiento aún no constituye P12.
+
+## Verificación funcional completa
+
+~~~bash
+bash scripts/verify-funcional.sh
+~~~
+
+El script fuerza .env.example pública, sin leer .env reales; construye, migra,
+comprueba fuentes/configuración/dependencias y migraciones pendientes. Ejecuta
+39 pruebas HTTP/demo dirigidas y una única invocación completa de las 165 pruebas,
+incluidas las 126 anteriores y P01–P11. Devuelve 0 solo si todo pasa.
+Durante desarrollo ejecutar únicamente el módulo/método afectado con manage.py
+test y --keepdb; no repetir la suite completa tras cada cambio.
+
+Además crea test_funcional_evidencia_UUID, importa el original, ejecuta seed_demo
+dos veces y comprueba HTTP real con Gunicorn, CSS local, ambos roles, CSRF,
+escrituras y cookie tras logout. Sus credenciales sintéticas son efímeras y no
+se imprimen. Base y volumen se conservan; ninguna prueba escribe en catalogo_modelos.
+Las pruebas Django usan test_catalogo_modelos y rollback. La UI de revisión
+local utiliza catalogo_modelos; no es la base de los tests.
+
+Pruebas de modelo/importación anteriores, si se necesitan por cambios en esas capas:
 
 ~~~bash
 bash scripts/verify-modelos.sh
@@ -39,7 +106,8 @@ docker compose -f compose.modelos.yaml logs db
 docker compose -f compose.modelos.yaml stop
 ~~~
 
-No se publican puertos ni URL de aplicación en esta fase. El volumen
+PostgreSQL no publica puertos; el perfil funcional publica solo localhost:8000.
+El volumen
 catalogo-modelos-201907608_datos_modelos conserva las bases catalogo_modelos y
 test_catalogo_modelos; las pruebas usan únicamente esta última y transacciones
 de rollback. --keepdb evita eliminarla al finalizar. No usar down -v ni apuntar
@@ -82,9 +150,8 @@ Las ediciones humanas divergentes se conservan comparando por campo contra el
 No se modifican asignaciones organizacionales ni se reactivan N1/catálogos.
 Los fallos revierten datos funcionales y conservan ejecución FALLIDA/incidencia.
 
-La red interna del entorno modelo usa autenticación trust exclusivamente para
-sus datos sintéticos y no contiene contraseñas reales. No reutilizarla como
-configuración funcional final; esa configuración requerirá variables locales
+La red interna de revisión usa autenticación trust para sus datos sintéticos.
+El despliegue final tendrá configuración independiente mediante variables locales
 según [.env.example](.env.example). Django nunca lee archivos .env por sí mismo.
 La clave sintética del Compose solo pertenece a este entorno aislado.
 
@@ -98,18 +165,19 @@ La clave sintética del Compose solo pertenece a este entorno aislado.
 - [CONTEXTO_V3.md](docs/contexto/CONTEXTO_V3.md): integridad efectiva de evidencia.
 - [FASE_MODELO.md](docs/evidencias/FASE_MODELO.md): comandos, resultados, fallos y commit probado.
 - [FASE_IMPORTACION.md](docs/evidencias/FASE_IMPORTACION.md): importaciones, P06–P08 y correcciones.
+- [FASE_FUNCIONAL.md](docs/evidencias/FASE_FUNCIONAL.md): HTTP/demo, P01–P05/P09–P11 y correcciones.
 
 Escribir mediante save()/objects.create() y desactivar() en modelos de dominio.
 update/bulk_create/bulk_update/delete se rechazan para evitar omitir reglas.
 SQL directo/save_base no son APIs de negocio autorizadas; las pruebas los usan
 deliberadamente solo para verificar constraints locales en test_.
 
-Hay 126 pruebas distintas: 63 de modelo, 60 de importación y tres oficiales.
-Las del modelo no sustituyen aceptación HTTP/UI. P06/P07/P08 usan el original;
-los otros nueve P siguen pendientes. El contrato del lector está limitado a
+Hay 165 pruebas distintas: 126 anteriores y 39 nuevas HTTP/demo, con ocho
+oficiales nuevas. P06/P07/P08 usan el original y son regresiones de esta fase;
+P12 es el único escenario oficial pendiente. El contrato del lector está limitado a
 Servicios Externos/A4:L4/5–101/E112:H122. Fórmulas en esas regiones se rechazan
 sin evaluar/cachear. Umbrales que exceden Decimal(20,6) fallan sin redondear.
 El lock común serializa escrituras; un servidor inaccesible puede impedir
 registrar el propio fallo. La evidencia es consultable vía ORM; UI es futura.
-La siguiente fase debe implementar autenticación/interfaz, demo,
-despliegue Docker final y aceptación/documentación/GitHub completos.
+La siguiente fase debe cerrar Docker reproducible desde clon limpio, P12,
+README/RESOLUCION finales, quinto tema de prompts y acceso/entrega GitHub.

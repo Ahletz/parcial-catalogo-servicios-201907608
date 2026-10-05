@@ -1,12 +1,14 @@
 # Registro inicial de decisiones
 
-Fecha: 2026-10-04. Estado: modelo/importación implementados; P06–P08 aprobadas.
+Fecha: 2026-10-04. Estado: dominio/importación y funcionalidad web implementados;
+P01–P11 automatizadas, P12 pendiente. Resultados en evidencias de cada fase.
 Autorización: solicitud del usuario de creación de contexto, posterior al análisis.
 Requisitos normativos en [REQUISITOS.md](REQUISITOS.md); evidencia del Excel en
 [ANALISIS_EXCEL.md](ANALISIS_EXCEL.md). La aprobación de arquitectura no autoriza
 implementarla durante V1. La fase posterior autorizó base/modelos/migraciones;
-la solicitud actual autoriza importador completo y P06–P08. No login/logout/UI
-completa ni push/tag. Los otros nueve escenarios siguen pendientes.
+la fase de importación autorizó importador completo y P06–P08. La nueva solicitud
+autoriza autenticación, roles, mantenimientos, UI, demo y P01–P05/P09–P11.
+P12 y entrega final permanecen pendientes; no se autoriza push/tag.
 
 ## Cómo interpretar este registro
 
@@ -116,6 +118,46 @@ Referencias: documentación oficial de
 [openpyxl](https://openpyxl.readthedocs.io/en/stable/api/openpyxl.reader.excel.html)
 y [transacciones Django](https://docs.djangoproject.com/en/5.2/topics/db/transactions/).
 
+## Concreción funcional — antes de implementar
+
+Base observada: f034c5af968dae920c94377c383095d5a7d98b29, main y árbol limpio.
+La solicitud funcional sustituye el límite histórico de no implementar HTTP.
+No rehacer dominio/importador ni ejecutar suites completas tras cada cambio.
+
+- D20: LoginView/LogoutView locales y AuthenticationForm adaptado al identificador
+  aprobado. Logout exclusivamente POST con CSRF. Guarda común comprueba sesión,
+  estado activo y rol; ADMINISTRADOR escribe, CONSULTA lee. GET nunca modifica
+  entidades. No exponer hash, origen interno, revisión, permisos ni flags de staff.
+- D21: ModelForms con listas explícitas de campos; referencias activas y la
+  referencia histórica actual disponibles. Conservar textos de servicios y
+  NULL. El dominio sigue validando padres, bajas, umbrales y responsables.
+  Validación/guardado y baja bajo domain_transaction; convertir ValidationError
+  en mensajes de formulario. No usar update/delete ni introducir modelos nuevos.
+- D22: seed_demo requiere credenciales por variables de entorno, crea jerarquía
+  DEMO y dos roles, y garantiza tres asignaciones válidas de importados. Repetir
+  no rota passwords ni pisa asignaciones humanas, no revive bajas ni cambia
+  identidades existentes incompatibles. Sin servicios disponibles, falla con
+  instrucción de importar primero y rollback completo. Nunca imprime credenciales.
+- D23: plantillas Django/CSS local, registro explícito de mantenimientos y filtros
+  validados, paginación estable y ficha completa. Perfil web local del Compose
+  interno para revisar funcionalidad; Docker final/P12 quedan para el cierre.
+  Pruebas dirigidas durante desarrollo; una ejecución completa al finalizar.
+
+Motivo/impacto: completar §3.1–3.3 sin alterar decisiones de dominio ni ampliar
+funciones. Se añadirán vistas/formularios/templates, comando demo y tests HTTP;
+solo rutas/settings, Compose, variables de ejemplo y documentos necesarios.
+Referencias oficiales consultadas:
+[auth Django 5.2](https://docs.djangoproject.com/en/5.2/topics/auth/default/),
+[ModelForms](https://docs.djangoproject.com/en/5.2/topics/forms/modelforms/) y
+[extends de Compose](https://docs.docker.com/compose/how-tos/multiple-compose-files/extends/).
+No se crean V4 ni nuevas dependencias.
+
+Hallazgo real → motivo → decisión D24 → impacto: P02 detectó _auth_user_id
+residual cuando ModelBackend devuelve AnonymousUser por cuenta inactiva.
+Concretar D20: ante rechazo, logout si hay usuario autenticado o SESSION_KEY
+residual. Evita restaurar esa sesión al reactivar; no modifica modelo/backend.
+Guarda accounts/access.py y regresión HTTP; revisión P04_REVISION_SESIONES.
+
 ## Pendientes de entrega y evidencia
 
 ### Hallazgo real de pruebas: obligatoriedad heredada (resuelto)
@@ -133,12 +175,12 @@ Documentado como hallazgo V3 y revisión real del prompt de trabajo.
   observado: origin / GitHub Ahletz; no se verificó acceso del catedrático.
 - Versiones exactas y mínimas Docker/Compose, URL/puertos, variables sin secretos.
 - README y RESOLUCION finales, modelo ER/diccionario y todos los comandos reales.
-- Implementación funcional HTTP/UI y P01–P05/P09–P12; importación ya aprobada
-  en P06–P08, con resultados en docs/evidencias/FASE_IMPORTACION.md.
+- P12 y despliegue final; funcionalidad HTTP/UI y P01–P11 automatizados, con
+  resultados en FASE_FUNCIONAL y FASE_IMPORTACION.
 - V2/V3 creados por hallazgos reales; revisar contexto vigente en fases futuras.
-- Dos temas de prompts adicionales y otra mejora real; IMPORTACIÓN y su
-  revisión de integridad están registradas. Correcciones de código sin revisar
-  instrucciones no cuentan como mejoras. Metadatos exactos de modelo pendientes.
+- Quinto tema de prompts pruebas/Docker; dos mejoras reales de importación y
+  autenticación registradas. Correcciones de código sin revisar instrucciones
+  no cuentan como mejoras. Metadatos exactos de modelo pendientes.
 - Verificar acceso/invitación de maldanap-usac, SHA final y etiqueta parcial-v2.0.
 
 Actualizar este registro junto con contexto y matriz cuando se cierre una

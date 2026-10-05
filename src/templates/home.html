@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Catálogo de servicios</h1>
+<p>Consulta los servicios y sus responsables, y navega por la estructura organizacional.</p>
+<div class="cards">
+  <a class="panel" href="{% url 'entity-list' entity='servicios' %}"><strong>{{ n2 }}</strong><span>Servicios de nivel 2</span></a>
+  <a class="panel" href="{% url 'entity-list' entity='nivel1' %}"><strong>{{ n1 }}</strong><span>Servicios de nivel 1</span></a>
+  <a class="panel" href="{% url 'organization' %}"><strong>{{ empresas }}</strong><span>Empresas</span></a>
+  <a class="panel" href="{% url 'entity-list' entity='usuarios' %}"><strong>{{ usuarios }}</strong><span>Usuarios</span></a>
+</div>
+{% if user.rol == 'CONSULTA' %}<p class="notice">Tu rol permite consultar la información.</p>{% endif %}
+{% endblock %}

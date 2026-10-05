@@ -13,9 +13,10 @@ Fuera de alcance: tickets, facturación, consumo de servicios y funcionalidades
 adicionales no justificadas por el enunciado.
 
 Estado: base Django, 14 modelos, cuatro migraciones iniciales e importador modular
-implementados. Autorización actual: importación/idempotencia/trazabilidad y P06–P08,
-que pasaron sobre el original. P01–P05/P09–P12 siguen pendientes. No login/logout
-ni interfaz completa. V2/V3 registran dos actualizaciones reales; V1 es histórico.
+implementados. Autorización actual: funcionalidad HTTP completa, demo y
+P01–P05/P09–P11; importador/P06–P08 conservados. Web con formularios/plantillas,
+roles, filtros/ficha y responsables; P12 queda pendiente. V2/V3 registran dos
+actualizaciones reales; V1 es histórico. No crear V4 para el mero avance funcional.
 
 ## Fuentes y confianza
 
@@ -49,7 +50,7 @@ WhiteNoise, openpyxl y Docker Compose. Fijar versiones exactas al implementar;
 no usar etiquetas latest ni dependencias flotantes como contrato reproducible.
 
 Estructura actual: src/config, src/accounts, src/organization, src/catalog,
-src/imports, tests, scripts y docs/evidencias. Templates/static e interfaz son futuros.
+src/imports, src/templates, src/static, tests, scripts y docs/evidencias.
 config configura; accounts autentica/autoriza; organization mantiene la
 jerarquía; catalog mantiene servicios; imports carga y registra procedencia.
 La aplicación final funciona sin suscripción de IA ni claves de modelos.
@@ -142,7 +143,12 @@ Crear cuentas demo reproducibles con credenciales configuradas localmente.
 Usuario.identificador se normaliza NFKC/strip/casefold y admite usuario o correo
 en un campo único. Puesto obligatorio, incluso superusuario; empresa derivada.
 Duración de sesión configurada: 2 h, HttpOnly/SameSite=Lax; Secure activable con
-HTTPS. Backend/configuración preparados; HTTP/roles sobre rutas aún pendientes.
+HTTPS. LoginView/LogoutView locales y guarda funcional de roles implementados.
+Si el backend presenta AnonymousUser pero SESSION_KEY sigue en sesión, logout
+al rechazar acceso protegido. Impide reutilizar sesión tras reactivar la cuenta.
+Toda escritura exige ADMINISTRADOR, POST y CSRF; CONSULTA recibe 403.
+ModelForms explícitos no exponen hash/origen/revisión/flags de permisos. seed_demo
+lee variables DEMO_* sin imprimir passwords, conserva cuentas/asignaciones humanas.
 
 Convenciones de diseño para la futura implementación: Python con PEP 8,
 snake_case en funciones/variables y PascalCase en clases; nombres de módulos
@@ -164,8 +170,9 @@ credenciales de proveedores o llaves. No modificar ENUNCIADO.md ni el Excel.
 No eliminar archivos existentes ni ejecutar operaciones destructivas. En futuras
 pruebas, aislar datos y cualquier reinicio destructivo del entorno de evaluación.
 No inventar evidencias, modelos/versiones de IA, resultados ni pruebas aprobadas.
-La fase actual autoriza importador y P06–P08 sobre datos aislados; no login/logout,
-autorización HTTP completa, UI ni otros escenarios de aceptación.
+La fase actual autoriza login/logout, roles, mantenimientos, UI, demo y pruebas
+P01–P11 sobre datos aislados. No rehacer modelos/importador ni cerrar P12 todavía.
+Durante desarrollo usar pruebas dirigidas; una ejecución completa al finalizar.
 
 Comandos ACTUALES de modelos, documentados en README:
 
@@ -176,19 +183,25 @@ docker compose -f compose.modelos.yaml run --rm modelos python manage.py migrate
 docker compose -f compose.modelos.yaml run --rm modelos python manage.py makemigrations --check --dry-run
 docker compose -f compose.modelos.yaml run --rm modelos python manage.py test tests.test_models --keepdb --verbosity 2
 bash scripts/verify-importacion.sh
+bash scripts/verify-funcional.sh
 docker compose -f compose.modelos.yaml run --rm modelos python manage.py import_catalog --file /app/data/CatalogoServicios.xlsx
 docker compose -f compose.modelos.yaml stop
 ~~~
 
-Entorno aislado, sin puertos publicados; base test_ y volumen propios. Clave
+Entorno aislado; PostgreSQL sin puerto publicado, web opcional en localhost:8000;
+base test_ y volumen propios. Clave
 sintética pública/trust solo aquí; jamás reemplazan la configuración funcional.
 Excel/enunciado montados solo lectura para hash e importación. No usar down -v.
 verify-importacion usa test_catalogo_modelos para tests y una nueva BD test_ para
 demostración CLI; ambas quedan conservadas. Nunca importa en la BD normal como
 prueba. No borrar bases anteriores al repetir el harness.
+verify-funcional fuerza .env.example pública, ejecuta 39 pruebas dirigidas y
+UNA suite completa de 165. probe_funcional crea nueva BD test_, importa/seed
+dos veces y prueba HTTP real sin imprimir credenciales/cookies. Se conservan bases.
+El perfil funcional y configuración local de demo están documentados en README.
 
 Contrato FUTURO del despliegue final; todavía no existen compose.yaml, init,
-seed_demo, verify.sh ni verify-persistence.sh. import_catalog ya existe.
+verify.sh ni verify-persistence.sh. import_catalog y seed_demo ya existen.
 WORKDIR de imagen: /app/src; ruta Excel final prevista: /app/data/CatalogoServicios.xlsx.
 
 ~~~bash
@@ -211,9 +224,9 @@ y un código distinto de 0 al fallar; no prueba la base de evaluación.
 
 ## Estado de aceptación P01–P12
 
-P06/P07/P08 están automatizadas y aprobadas. P01–P05/P09–P12 están PENDIENTES;
-pruebas internas no los sustituyen. Resultados: evidencias/FASE_MODELO.md y
-evidencias/FASE_IMPORTACION.md dentro de docs.
+P01–P11 están automatizadas; resultados dirigidos y finales en FASE_FUNCIONAL.
+P06–P08 conservan su aprobación previa y se verifican como regresiones.
+P12 está PENDIENTE. Las pruebas internas no sustituyen aceptación oficial.
 
 | ID | Resultado esperado |
 |---|---|
@@ -232,5 +245,6 @@ evidencias/FASE_IMPORTACION.md dentro de docs.
 
 Documentar comandos, fecha, commit y resultados reales; verificar interfaz con
 ambos roles cuando exista UI. V2/V3 registran dos hallazgos y actualizaciones.
-Registrar prompts usados y correcciones: P03_REVISION_INTEGRIDAD es una revisión
-real del prompt de importación; falta otra mejora y temas autenticación/pruebas.
+Registrar prompts usados y correcciones: P03_REVISION_INTEGRIDAD y
+P04_REVISION_SESIONES son mejoras por fallos reales; cuatro temas usados.
+Falta el quinto tema pruebas/Docker y versión exacta disponible de IA.

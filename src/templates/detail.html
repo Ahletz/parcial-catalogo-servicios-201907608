@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="heading"><h1>{{ service.codigo }} · {{ service.nombre }}</h1>
+{% if user.rol == 'ADMINISTRADOR' %}<a class="button" href="{% url 'entity-edit' entity='servicios' pk=service.pk %}">Editar servicio</a>{% endif %}</div>
+<dl class="panel detail">
+{% for label, value in attributes %}<dt>{{ label }}</dt><dd>{{ value|linebreaksbr }}</dd>{% endfor %}
+</dl>
+<a href="{% url 'entity-list' entity='servicios' %}">Volver a servicios</a>
+{% endblock %}

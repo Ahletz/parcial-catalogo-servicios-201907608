@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="heading"><h1>{{ title }}</h1>
+{% if user.rol == 'ADMINISTRADOR' %}<a class="button" href="{% url 'entity-create' entity=entity %}">Crear registro</a>{% endif %}</div>
+{% if filters %}
+<form method="get" class="panel filters">
+  {% for field in filters %}<div>{{ field.label_tag }}{{ field }}{{ field.errors }}</div>{% endfor %}
+  <div class="actions"><button type="submit">Filtrar</button><a href="{% url 'entity-list' entity=entity %}">Limpiar</a></div>
+</form>
+{% endif %}
+<p>{{ page.paginator.count }} registros · Página {{ page.number }} de {{ page.paginator.num_pages }}</p>
+<div class="table-wrap">
+<table>
+  <thead><tr>{% for label in headers %}<th scope="col">{{ label }}</th>{% endfor %}<th scope="col">Acciones</th></tr></thead>
+  <tbody>{% for pk, cells in rows %}<tr>
+    {% for value in cells %}<td>{{ value }}</td>{% endfor %}
+    <td class="actions">
+      {% if entity == 'servicios' %}<a href="{% url 'service-detail' pk=pk %}">Ver ficha</a>{% endif %}
+      {% if user.rol == 'ADMINISTRADOR' %}
+      <a href="{% url 'entity-edit' entity=entity pk=pk %}">Editar</a>
+      <a href="{% url 'entity-deactivate' entity=entity pk=pk %}">Desactivar</a>
+      {% endif %}
+    </td>
+  </tr>{% empty %}<tr><td colspan="10">No hay registros para los criterios seleccionados.</td></tr>{% endfor %}</tbody>
+</table>
+</div>
+<div class="pagination" aria-label="Páginas">
+{% if page.has_previous %}<a href="?{{ query }}{% if query %}&amp;{% endif %}page={{ page.previous_page_number }}">Anterior</a>{% endif %}
+{% if page.has_next %}<a href="?{{ query }}{% if query %}&amp;{% endif %}page={{ page.next_page_number }}">Siguiente</a>{% endif %}
+</div>
+{% endblock %}

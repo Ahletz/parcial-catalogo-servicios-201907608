@@ -1,0 +1,7 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>{{ title }}</h1>
+<div class="cards">
+{% for slug, label in entities %}<a class="panel" href="{% url 'entity-list' entity=slug %}">{{ label }}</a>{% endfor %}
+</div>
+{% endblock %}
