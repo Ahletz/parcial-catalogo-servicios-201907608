@@ -24,31 +24,39 @@ No instalar Python, Django ni PostgreSQL en el anfitrión.
 ~~~bash
 git clone https://github.com/Ahletz/parcial-catalogo-servicios-201907608.git
 cd parcial-catalogo-servicios-201907608
-cp .env.example .env
-~~~
-
-Editar .env **localmente** antes del primer arranque:
-
-| Variable | Configuración |
-|---|---|
-| DJANGO_SECRET_KEY | Valor local aleatorio; reemplazar CONFIGURAR_LOCALMENTE. |
-| DB_PASSWORD | Contraseña local de PostgreSQL; reemplazar placeholder. |
-| DEMO_ADMIN_PASSWORD / DEMO_CONSULTA_PASSWORD | Contraseñas exclusivamente demo, distintas, no triviales; reemplazar placeholders. |
-| DEMO_ADMIN_IDENTIFICADOR / DEMO_CONSULTA_IDENTIFICADOR | admin.demo / consulta.demo por defecto. |
-| DB_NAME / DB_USER | catalogo / catalogo; fijar antes de crear el volumen. |
-| DJANGO_DEBUG | false. |
-| DJANGO_ALLOWED_HOSTS | localhost,127.0.0.1 para acceso local. |
-| DJANGO_SECURE_COOKIES | false para HTTP local; true solo al servir HTTPS. |
-| APP_PORT | 8000 por defecto; cambiar si está ocupado. |
-
-No versionar .env ni publicar sus valores. Docker Compose suministra variables;
-Django no abre .env. No cambiar DB_PASSWORD/DB_USER sobre un volumen ya
-inicializado esperando que se reconfigure PostgreSQL: requiere gestión explícita.
-No usar docker compose config sin --quiet para evitar mostrar configuración.
-
-~~~bash
 docker compose up --build -d
 ~~~
+
+**No es obligatorio crear .env para evaluar.** compose.yaml define defaults con
+sintaxis ${VARIABLE:-valor} exclusivamente para desarrollo/evaluación local:
+son valores públicos, inseguros y **no deben usarse en producción**. No son
+secretos reales.
+
+| Variable | Default de evaluación (compose.yaml) |
+|---|---|
+| DJANGO_SECRET_KEY | django-insecure-evaluation-only-change-in-production |
+| DB_PASSWORD | evaluacion-local-insegura-no-produccion |
+| DEMO_ADMIN_IDENTIFICADOR / DEMO_ADMIN_PASSWORD | admin.demo / Evaluacion-Admin-Demo-2026 |
+| DEMO_CONSULTA_IDENTIFICADOR / DEMO_CONSULTA_PASSWORD | consulta.demo / Evaluacion-Consulta-Demo-2026 |
+| DB_NAME / DB_USER | catalogo / catalogo |
+| DJANGO_DEBUG | false |
+| DJANGO_ALLOWED_HOSTS | localhost,127.0.0.1 |
+| DJANGO_SECURE_COOKIES | false (true solo al servir HTTPS) |
+| APP_PORT | 8000 (cambiar si está ocupado) |
+
+Para personalizar o desplegar fuera de evaluación, copiar la plantilla y
+reemplazar los placeholders **antes del primer arranque**; los valores de .env
+(o variables exportadas en la shell) tienen prioridad sobre los defaults:
+
+~~~bash
+cp .env.example .env   # opcional; editar localmente
+~~~
+
+No versionar .env (está en .gitignore) ni publicar sus valores. Docker Compose
+suministra variables; Django no abre .env. No cambiar DB_PASSWORD/DB_USER sobre
+un volumen ya inicializado esperando que se reconfigure PostgreSQL: requiere
+gestión explícita. No usar docker compose config sin --quiet para evitar mostrar
+configuración.
 
 Este comando construye desde el código del repositorio, espera PostgreSQL healthy,
 ejecuta migraciones en init y después inicia web. collectstatic se ejecuta al
@@ -65,7 +73,7 @@ docker compose exec -T web python manage.py seed_demo
 ~~~
 
 La migración explícita es repetible; init ya la aplicó en el arranque. Entrar
-con admin.demo o consulta.demo y su contraseña configurada localmente.
+con admin.demo o consulta.demo y su contraseña (defaults de evaluación arriba o .env).
 Administrador mantiene usuarios, jerarquía, N1/N2, clase, criticidad y tipo.
 Consulta solo lee: las escrituras directas reciben HTTP 403. Logout es POST
 con CSRF; cuentas inactivas y cookies anteriores invalidadas se rechazan.

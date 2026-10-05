@@ -5,21 +5,23 @@ x-app: &app
     context: .
     dockerfile: Dockerfile
   image: catalogo-servicios:local
+  # Defaults SOLO para evaluación/local: públicos e inseguros, NO aptos para
+  # producción. Un .env opcional (o variables exportadas) los sobrescribe.
   environment: &app-env
-    DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:?Configura DJANGO_SECRET_KEY en .env}
+    DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-django-insecure-evaluation-only-change-in-production}
     DJANGO_SETTINGS_MODULE: config.settings
     DJANGO_DEBUG: ${DJANGO_DEBUG:-false}
     DJANGO_ALLOWED_HOSTS: ${DJANGO_ALLOWED_HOSTS:-localhost,127.0.0.1}
     DJANGO_SECURE_COOKIES: ${DJANGO_SECURE_COOKIES:-false}
     DB_NAME: ${DB_NAME:-catalogo}
     DB_USER: ${DB_USER:-catalogo}
-    DB_PASSWORD: ${DB_PASSWORD:?Configura DB_PASSWORD en .env}
+    DB_PASSWORD: ${DB_PASSWORD:-evaluacion-local-insegura-no-produccion}
     DB_HOST: db
     DB_PORT: "5432"
     DEMO_ADMIN_IDENTIFICADOR: ${DEMO_ADMIN_IDENTIFICADOR:-admin.demo}
-    DEMO_ADMIN_PASSWORD: ${DEMO_ADMIN_PASSWORD:-CONFIGURAR_LOCALMENTE}
+    DEMO_ADMIN_PASSWORD: ${DEMO_ADMIN_PASSWORD:-Evaluacion-Admin-Demo-2026}
     DEMO_CONSULTA_IDENTIFICADOR: ${DEMO_CONSULTA_IDENTIFICADOR:-consulta.demo}
-    DEMO_CONSULTA_PASSWORD: ${DEMO_CONSULTA_PASSWORD:-CONFIGURAR_LOCALMENTE}
+    DEMO_CONSULTA_PASSWORD: ${DEMO_CONSULTA_PASSWORD:-Evaluacion-Consulta-Demo-2026}
   volumes:
     - ./ENUNCIADO.md:/fuentes/ENUNCIADO.md:ro
     - ./data/CatalogoServicios.xlsx:/fuentes/CatalogoServicios.xlsx:ro
@@ -32,7 +34,7 @@ services:
     environment:
       POSTGRES_DB: ${DB_NAME:-catalogo}
       POSTGRES_USER: ${DB_USER:-catalogo}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:?Configura DB_PASSWORD en .env}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-evaluacion-local-insegura-no-produccion}
     volumes:
       - datos_postgres:/var/lib/postgresql/data
     networks: [datos]
