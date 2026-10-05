@@ -1,142 +1,90 @@
-# Matriz de trazabilidad — fase funcional
+# Matriz final de trazabilidad
 
-Fecha: 2026-10-04. Requisitos: [REQUISITOS.md](REQUISITOS.md).
-Decisiones: [DECISIONES.md](DECISIONES.md).
+Fuente: [REQUISITOS](REQUISITOS.md), ENUNCIADO §1–10. Fecha: 2026-10-04.
+Estados: COMPLETO exige evidencia ejecutada/documental real; PENDIENTE MANUAL
+separa metadatos/acceso/entrega que el agente no puede confirmar. Las fases
+anteriores conservan resultados históricos, no pendientes vigentes.
 
-La tabla de cobertura actual distingue modelo de aceptación funcional. La
-matriz posterior conserva criterios del plan. P01–P11 automatizadas y probadas;
-P06–P08 conservan aprobación previa. P12 sigue pendiente. Un test de modelo
-no completa un P; los nuevos escenarios comprueban peticiones HTTP.
+F = [FASE_FUNCIONAL](evidencias/FASE_FUNCIONAL.md), I =
+[FASE_IMPORTACION](evidencias/FASE_IMPORTACION.md), C =
+[FASE_CIERRE](evidencias/FASE_CIERRE.md), M =
+[FASE_MODELO](evidencias/FASE_MODELO.md). Resultado final de ejecución en C.
 
-## Cobertura actual parcial
+## Todos los requisitos
 
-| Requisito | Implementación real | Control interno / estado |
-|---|---|---|
-| A01–A05 | accounts/forms.py/access.py, config/urls.py/web.py y templates | Login/logout, Argon2id, sesiones/inactivos, roles/CSRF probados en HTTP. P01–P03. |
-| O01–O03 | organization/models.py, UsuarioForm y mantenimientos web | Jerarquía, unicidad, referencias, empresa derivada y seis CRUD/bajas probados. P04/P05. |
-| O04 | config/domain.py y desactivar() mediante web | Dependientes activos/desconocidos bloqueados e históricos conservados en HTTP. |
-| C01/C02/C03 | catalog/forms.py, mantenimientos y templates | N1/N2/tres clasificaciones mantenibles; referencias controladas y Demostration conservado. |
-| C04/C07 | ServicioForm y dominio existente | Umbrales/responsables/movimientos probados por HTTP, P09/P11; demo tres asignaciones. |
-| C05/C06 | ServiceFilters, list/detail y paginación | Código/nombre, cinco filtros, combinaciones/páginas y ficha completa probados. P10. |
-| I01–I08 | imports/services y comando import_catalog | 12/46, repetición, SE.12/NULL, filas 42/67, opciones, trazabilidad y divergencias probados; P06–P08 aprobadas. |
-| IA01/IA02 | AGENTS V3, CONTEXTO_V2/V3 | Dos actualizaciones por hallazgos reales; V1 histórico. |
-| IA03/IA04 | P01_ANALISIS/P02_MODELO/P03_IMPORTACION/P04_AUTENTICACION_FUNCIONAL y dos revisiones | Cuatro temas y dos mejoras reales comprobadas; quinto tema y metadatos exactos pendientes. |
-| H01/H02/H04 | verify-funcional.sh, verify-web-local.sh y probe_funcional.py, además de harness previo | Pruebas dirigidas, suite completa y HTTP/CLI reales en BD test_; puerto local verificado, P12 pendiente. |
-| D01/D02/D03 | Dockerfile.modelos, compose.modelos.yaml, requirements | Entorno mínimo Python/PostgreSQL reproducible; despliegue final/P12 pendientes. |
-| I08/H03 | scripts/check_sources.py y mounts ro | Originales solo lectura y hashes verificados antes/después; P06 aprobada. |
+| Requisito | Implementación | Prueba / control | Evidencia | Estado |
+|---|---|---|---|---|
+| A01 | accounts/forms, config/urls LoginView/LogoutView | P01; HTTP real ambos roles/logout | F/C | COMPLETO |
+| A02 | settings Argon2id, Usuario.set_password | test_models hash/sal; no exposición HTTP | M/F/C | COMPLETO |
+| A03 | accounts/access functional_access | P02, CSRF y todas las rutas protegidas | F/C | COMPLETO |
+| A04 | permisos de servidor y menú por rol | P03, 19 tests seguridad, HTTP consulta 403 | F/C | COMPLETO |
+| A05 | guarda de inactivos/SESSION_KEY y logout POST | P02; cookie antigua/reactivación | F/C | COMPLETO |
+| A06 | seed_demo y variables DEMO_* | 7 tests demo; CLI repetida 2 roles | F/C/README | COMPLETO |
+| O01 | organization/accounts, web/forms/templates | P04 y mantenimiento/bajas de seis entidades | M/F/C | COMPLETO |
+| O02 | FK jerarquía/empresa derivada | P04, varios usuarios/puesto, relaciones recuperadas | M/F/C | COMPLETO |
+| O03 | uniques/FK y dominio padres activos | P05, mismos códigos en padres diferentes, FK/estado | M/F/C | COMPLETO |
+| O04 | desactivar/PROTECT/guarda dependientes | test_models y test_web_maintenance/security | M/F/C/RESOLUCION | COMPLETO |
+| C01 | N1/N2 con todos los campos y uniques | P05/P06; esquema/ficha | M/I/F/C | COMPLETO |
+| C02 | tres catálogos y referencias ModelChoice | opciones 2/5/11, Demostration, CRUD/rechazo inválidas | I/F/C | COMPLETO |
+| C03 | web/Form explícitos/save validado | CRUD N1/N2, obligatorios, bajas y GET sin mutación | F/C | COMPLETO |
+| C04 | N2.clean/CHECK/ServicioForm | P09 creación/edición; igualdad/NULL≠0 | M/F/C | COMPLETO |
+| C05 | ServiceFilters/lista paginada de 20 | P10 búsquedas/cinco filtros/combinaciones/páginas | F/C | COMPLETO |
+| C06 | detail/template todos atributos | test_web_security ficha; HTTP real detalle | F/C | COMPLETO |
+| C07 | FK responsables/dominio/seed_demo | P11; traslados protegidos; 3 asignaciones válidas | M/F/C | COMPLETO |
+| I01 | import_catalog/importer reconciliación | P06/P07; reimportación 0/0/76 | I/C | COMPLETO |
+| I02 | parser combinaciones/celda principal | P06; no propagación externa | I/C | COMPLETO |
+| I03 | normalizer canónico SE.12/incidencia | P08 ambos nombres/evidencia coordenadas | I/C | COMPLETO |
+| I04 | código texto exacto | P08 SE.12.1/.2/.3 | I/C | COMPLETO |
+| I05 | campos nullable/desconocidos | P08 E:L99–101 NULL | I/C | COMPLETO |
+| I06 | parser identidad/continuaciones/opciones | filas 42/67 no vinculadas; 49 continuaciones | I/C | COMPLETO |
+| I07 | RegistroOrigen/Incidencia/snapshots | P07/P08; conflictos, inferencia, edición humana 2ª/3ª | I/C | COMPLETO |
+| I08 | original ro/check_sources/12–46 | P06 y SHA inicial/final | I/C | COMPLETO |
+| IA01 | AGENTS, V1/V2/V3, RESOLUCION §7 | lectura por fases y comandos documentados | contextos/commits/RESOLUCION | COMPLETO |
+| IA02 | actualizaciones V2/V3 y regla de confianza | full_clean/bypass y optional/baseline/FALLIDA | contextos/decisiones | COMPLETO |
+| IA03 | cinco temas P01–P05 usados | objetivo/contexto/instrucciones/restricciones/salida/aceptación | prompts/RESOLUCION §8/C | COMPLETO |
+| IA04 | revisiones P03/P04 por fallos reales | mismos tests pasan; tool/fecha/modelo disponible | prompts/I/F; exacta manual | COMPLETO con metadato exacto pendiente |
+| H01 | verify.sh/common/P12/probes y AGENTS | rutina preparación/BD/carga/calidad/pruebas | C/README | COMPLETO tras harness final 0 |
+| H02 | proyecto/volumen QA y test_catalogo_final | rollback; DB/CLI/HTTP/P12; 0/no-0 | C/RESOLUCION §9 | COMPLETO tras harness final 0 |
+| H03 | límites AGENTS, ro, configuración pública | hashes; no .env real; no down -v/drop | C | COMPLETO |
+| H04 | ciclos errores→correcciones reales | fixture run, optional, sesión/red con repetición | M/I/F/C | COMPLETO |
+| D01 | Dockerfile/compose/.dockerignore/.env.example | build desde fuentes fijadas | C/README | COMPLETO tras ensayo limpio |
+| D02 | db healthy/init antes web, procesamiento Docker | up --build -d; CLI/contenedores | C/README | COMPLETO tras ensayo limpio |
+| D03 | volumen/healthchecks | P12 IDs nuevos, mismo dato y volumen | C | COMPLETO tras P12 final |
+| D04 | README comandos/config/logs/stop/up/recuperación | lectura y ensayo limpio, destructivo separado | C/README | COMPLETO |
+| D05 | sin proveedor IA para runtime | HTTP/CLI sin claves IA | C/configuración | COMPLETO |
+| GEN01 | trabajo individual/decisiones/reflexión | comprensión a defender en evaluación | RESOLUCION §14 | Documentado; defensa humana |
+| G01 | main con fuente/Docker/migraciones/Excel/docs | inventario Git, .env excluida, PDF fuera | C | Preparado localmente |
+| G02 | instrucciones maldanap-usac | verificar invitación/acceso en GitHub | README; sin constancia remota | PENDIENTE MANUAL |
+| G03 | URL/main/carné/SHA/tag documentados | push/tag/entrega por el usuario | README/C | PENDIENTE MANUAL |
+| G04 | disponibilidad durante calificación | mantenimiento remoto humano | README | PENDIENTE MANUAL |
+| DOC01 | README reproducible con metadatos conocidos | clon limpio/flujo final | C/README | Técnico completo; nombre completo pendiente |
+| DOC02 | RESOLUCION con diez apartados y extensiones | DER/diccionario/mapeo/ingenierías/matriz/evidencia | RESOLUCION/C | COMPLETO |
 
-Los resultados y commit probado están en
-[FASE_MODELO.md](evidencias/FASE_MODELO.md). Enlaces al esquema y pruebas:
-[MODELO_DATOS.md](MODELO_DATOS.md), [tests](../tests/test_models.py).
-Evidencia de importación:
-[FASE_IMPORTACION.md](evidencias/FASE_IMPORTACION.md).
-Evidencia funcional: [FASE_FUNCIONAL.md](evidencias/FASE_FUNCIONAL.md).
+## P01–P12 individuales
 
-## Aceptación cerrada en esta fase
+Prefijos test_ de OfficialWebAcceptanceTests en tests/test_web_acceptance.py;
+P06–P08 de tests/test_import_acceptance.py. P12 es operativo, no método Django.
 
-| Requisito | Tarea/implementación real | Prueba real | Evidencia |
-|---|---|---|---|
-| I01/I02/I06/I08/C02 | T07–T10 parser/normalizer/importer/traceability, import_catalog | test_P06_importar_original: 12 N1/46 N2, opciones, incidencias y origen. | FASE_IMPORTACION, comando/fecha/commit. |
-| I01/I07 | Reconciliación PD06/D14 y ejecución nueva | test_P07_repetir_importacion: cero duplicados/cambios silenciosos, 152 orígenes. | Primera/segunda y contadores reales. |
-| I03/I04/I05/I07 | Canónico SE.12, texto exacto, inferencia y NULL | test_P08_se12_y_ausencias | Ambos nombres/coordenadas, transformación C101 y ausencias. |
-| D10/PD06 | Baseline IMPORTADO y comparación por campo | tests de segunda/tercera reimportación, fuente nueva y edición humana. | Suite de persistencia y snapshots. |
-| H02/H03 | BD test_ y demostración CLI nueva; nunca reset normal | probe_importacion.py y checks hash | Nombre de base conservada, salidas/códigos y hashes. |
+| ID | Implementación | Prueba identificada | Evidencia | Estado |
+|---|---|---|---|---|
+| P01 | LoginView/LocalAuthenticationForm | P01_login_valido_e_invalido | F/C | APROBADA |
+| P02 | guarda/LogoutView/inactivos | P02_sin_sesion_logout_cookie_anterior_e_inactivo | F/C | APROBADA |
+| P03 | functional_access(write=True) | P03_consulta_lee_y_no_escribe | F/C | APROBADA |
+| P04 | ModelForms jerarquía/Usuario | P04_jerarquia_completa_y_usuario_por_http | F/C | APROBADA |
+| P05 | forms/dominio/FK/UNIQUE | P05_duplicado_y_referencia_inexistente_rechazados | F/C | APROBADA |
+| P06 | importador original | P06_importar_original | I/C | APROBADA, regresión |
+| P07 | reconciliación/trazabilidad | P07_repetir_importacion | I/C | APROBADA, regresión |
+| P08 | políticas SE.12/NULL | P08_se12_y_ausencias | I/C | APROBADA, regresión |
+| P09 | N2.clean/CHECK/form | P09_crear_y_editar_umbrales_invalidos | F/C | APROBADA |
+| P10 | filtros/lista/paginación | P10_busqueda_filtros_combinaciones_y_paginacion | F/C | APROBADA |
+| P11 | N2 responsable/sección | P11_responsable_otra_seccion_rechazado | F/C | APROBADA |
+| P12 | persistencia Compose/volumen | scripts/verify-persistence.sh y persistence_record.py | C; dirigido 0, final por registrar | APROBADA dirigida |
 
-## Aceptación funcional nueva
+## Tareas y cierre
 
-Métodos de OfficialWebAcceptanceTests en tests/test_web_acceptance.py; todos
-usan PostgreSQL test_ y peticiones HTTP a través de middleware/vistas/templates.
-Comando, fecha, fallos/correcciones y commit probado en FASE_FUNCIONAL.
-
-| Requisito | Implementación | Prueba identificada | Evidencia |
-|---|---|---|---|
-| A01/A02 | LoginView/LocalAuthenticationForm/hasher existente | P01 login válido normalizado e inválido. | Acceso y sesión correctos, rechazo sin login. |
-| A03/A05 | Guarda común/LogoutView/ModelBackend | P02 anónimo, logout/cookie antigua e inactivo. | Sesión invalidada; reactivación no recupera cookie previa. |
-| A04 | functional_access(write=True) y menú según rol | P03 consulta lee y peticiones directas rechazan escritura. | 403, estado persistido intacto; todas las rutas con regresión adicional. |
-| O01/O02 | ModelForms y mantenimientos de seis entidades | P04 crear jerarquía completa y usuario por HTTP. | Relaciones recuperables/empresa derivada. |
-| O03 | Formularios/constraints/dominio | P05 duplicado y FK inexistente. | Mensajes comprensibles y ningún dato inválido persistido. |
-| C04 | ServicioForm/ServicioNivel2.clean | P09 crear/editar mínimo > máximo. | Formulario con error, valores previos intactos. |
-| C05/C06 | ServiceFilters/listado/ficha | P10 código/nombre, cinco filtros, combinación, NULL y páginas. | Resultados/páginas coherentes. |
-| C07 | Referencias controladas/dominio de responsables | P11 otra sección rechazado, misma sección aceptado. | Datos válidos recuperados. |
-| A06/C07 | seed_demo transaccional | Siete tests demo y dos CLI reales. | Dos roles/tres asignaciones; repetición sin nuevas entidades ni sobrescrituras. |
-| O01/O04/C03 | Mantenimientos reutilizados | Cinco tests CRUD y 19 de seguridad HTTP. | Altas/edición/bajas sin borrado, traslados protegidos, todos los formularios. |
-
-P06–P08 se ejecutan como regresiones, sin presentarlas como pruebas nuevas.
-
-## Tareas futuras
-
-| Fase | Tareas |
-|---|---|
-| F0 Contexto | T01 registrar contexto/requisitos; T02 cerrar decisiones y modelo conceptual. |
-| F1 Base | T03 crear Django/usuario personalizado; T04 Docker, configuración, dependencias y estáticos. |
-| F2 Modelo | T05 organización/usuarios/clasificaciones/migraciones; T06 N1/N2, responsables, restricciones y procedencia. |
-| F3 Importación | T07 lector/clasificación; T08 reglas del Excel; T09 transacciones/idempotencia/reporte; T10 pruebas importación. |
-| F4 Funcionalidad | T11 auth/roles; T12 organización/bajas; T13 catálogo/filtros/fichas; T14 demo; T15 pruebas funcionales. |
-| F5 Harness | T16 preparación/calidad/pruebas aisladas; T17 P12; T18 ciclo de corrección. |
-| F6 Documentación | T19 README/RESOLUCION; T20 contexto/prompts/evidencias/matriz. |
-| F7 Entrega | T21 clon limpio/recorrido; T22 acceso GitHub/commit/etiqueta/entrega. |
-
-T02 queda resuelto como diseño; T03/T05/T06 implementados para modelo;
-T04/T16 limitados al entorno interno y perfil web local. T07–T15 implementados
-y probados. T20 incluye V3, cuatro temas y dos revisiones reales; no cierre
-final de IA/documentación. Solo T17/P12, despliegue final, documentación y entrega
-permanecen pendientes.
-
-## Requisito → futura implementación → futura prueba → futura evidencia
-
-P = prueba obligatoria; VC = control complementario; VD = verificación documental.
-La tabla conserva el plan normativo: P01–P11 remiten al cierre real anterior;
-P12 y requisitos de entrega/IA aún incompletos conservan criterios pendientes.
-
-| Requisito | Tarea / implementación prevista | Prueba o control esperado | Evidencia futura |
-|---|---|---|---|
-| A01 | T11 accounts login/logout | P01 válido accede; inválido se rechaza. | Resultado P01 con comando/fecha/commit. |
-| A02 | T11 hasher Argon2id | VC hash especializado/sal, no texto plano ni exposición. | Resultado sin imprimir hash ni contraseña. |
-| A03, A05 | T11 protección/estado/sesión | P02 sin sesión, logout con cookie anterior e inactivo; sesión previa también rechazada. | Resultado P02 y comprobación de no escritura. |
-| A04 | T11 roles y vistas | P03 consulta lee; peticiones directas de modificación rechazadas. | Resultado P03, respuestas sin secretos. |
-| A06 | T14 comando demo | VC ambos roles creados de forma repetible con configuración local. | README y resultado sin credenciales reales. |
-| O01, O02 | T05/T12 organization/accounts | P04 jerarquía y usuario recuperables; VC altas/edición/bajas de seis entidades. | Resultado P04 y recorrido UI. |
-| O03, C01 | T05/T06 unicidad y FK | P05 duplicado/referencia inexistente rechazados. | Resultado P05, errores comprensibles. |
-| O03 | T05/T12 reglas de padres | VC sin huérfanos/padres inactivos; mismo código bajo otro padre válido. | Resultados integración y restricciones. |
-| O04 | T12 desactivación | VC bloqueo de dependencias activas y conservación histórica. | Prueba por entidad y política RESOLUCION. |
-| C01, C03 | T06/T13 servicios | VC mantenimiento N1/N2, todos los campos y referencias válidas. | Resultados y ficha/UI. |
-| C02 | T05/T13 clasificaciones | VC mantener catálogos/opciones; etiquetas originales y solo referencias válidas. | Resultados, mapeo y formularios. |
-| C04 | T06 validación umbrales | P09 creación y edición mínimo > máximo no guardan; VC igualdad/NULL. | Resultado P09 y datos persistidos. |
-| C05 | T13 consulta | P10 código/nombre y filtros N1/estado/clase/criticidad/tipo, combinación y paginación coherentes. | Resultado P10 y recorrido UI. |
-| C06 | T13 ficha | VC todos los atributos, ausencias y relación N1 visibles. | Prueba de vista y evidencia seleccionada UI. |
-| C07 | T06/T13 responsable | P11 otra sección rechazada; VC sección válida y usuario opcional. | Resultado P11 y asignación válida. |
-| C07, O02 | T12 movimientos | VC traslado de usuario/puesto no invalida asignaciones existentes. | Resultado integración. |
-| C07, A06 | T14 seed_demo | VC al menos tres asignaciones válidas, ambos roles; repetición sin pisar cambios. | Resultado seed y README. |
-| I01, I02, I06, I08 | T07–T10 imports | P06 original: 12 N1/46 N2, combinaciones/opciones/incidencias. | Reporte original con hash y resultado P06. |
-| I01, I07 | T09/T10 reimportación | P07 sin duplicados y con nueva ejecución trazable. | Reportes de ambas ejecuciones y P07. |
-| I03, I04, I05 | T08/T10 políticas | P08 SE.12 canónico/evidencia de ambos nombres, códigos textuales y NULL. | P08 e incidencias con coordenadas. |
-| I06 | T07/T08 clasificación | VC filas 42/67 sin servicio y 49 continuaciones agrupadas. | Incidencias/contadores del reporte. |
-| I07, C01 | T08 prefijo fila 101 | VC SE.12.3 asociado a SE.12 con inferencia explícita y padre único. | Registro de transformación C101. |
-| I07 | T08/T09 origen/conflictos | VC todos los importados tienen origen; conflicto controlado N2 reportado. | Registros de origen y regla aplicada. |
-| I01, I07 | T09 protección de cambios | VC edición humana posterior conservada ante fuente divergente. | Prueba de reimportación e incidencia. |
-| I08, H03 | T10/T16 integridad original | VC SHA-256 sin cambios antes/después; archivo solo lectura. | Hash comparado y configuración de acceso. |
-| IA01 | T01/T20 AGENTS/contexto | VD agente puede ubicar fuentes, alcance, reglas y comandos; selección por fase. | V1/V2 existentes; verificación final y commits de entrega pendientes. |
-| IA02 | T20 actualizaciones | VD dos cambios por hallazgo, motivos/impactos/commits y regla de confianza. | V2/V3 existen por hallazgos reales; V1 no cuenta como actualización. |
-| IA03 | T20 prompts | VD cinco usados con todos los campos y temas obligatorios. | Cuatro temas registrados; pruebas/Docker y versión exacta pendientes. |
-| IA04 | T20 mejoras | VD dos iteraciones con problema y resultados reales; metadatos. | P03 integridad/P04 sesiones comprobadas; metadatos exactos pendientes. |
-| H01, H02 | T16 scripts/tests | VC rutina reproducible, datos aislados, 0/no-0 y niveles explicados. | scripts/verify.sh, resultados y documentación. |
-| H03 | T01/T16 límites | VC no lectura/publicación de secretos ni destrucción fuera de pruebas. | Instrucciones y controles sin contenido sensible. |
-| H04 | T18 ciclo IA | VC fallo observado → corrección → nueva ejecución satisfactoria. | Extractos, diff, comandos/commit; declarar ejercicio si deliberado. |
-| D01, D02 | T04/T21 Docker | VC clon limpio construye/arranca con comando requerido, sin runtimes anfitrión. | Dockerfile/Compose y resultado del ensayo. |
-| D03 | T04/T17 volumen/dependencias | P12 reinicio sin borrar volumen conserva registro previo; VC arranque espera BD. | Script P12, lecturas antes/después y resultado. |
-| D04 | T19/T21 README | VD variables, versiones, URL/puertos, logs, apagado/reinicio/recuperación/pruebas. | README validado desde clon limpio. |
-| D05 | T21 independencia de IA | VC recorrido funcional sin claves ni suscripción IA. | Configuración y resultado del recorrido. |
-| P01–P12 | T10/T15–T17 tests | Los doce escenarios automatizados, datos aislados y UI revisada. | Resultado individual por ID, comando, fecha y commit. |
-| G01 | T22 repositorio | VD fuentes/Excel/migraciones/pruebas/docs incluidos; secretos/dependencias excluidos. | Inventario del commit final. |
-| G02 | T22 colaborador | VD acceso suficiente o invitación enviada y pendiente informada. | Constancia seleccionada de acceso/invitación. |
-| G03, G04 | T22 entrega | VD URL/nombre/carné/rama/SHA y parcial-v2.0 coinciden; disponibilidad mantenida. | Datos de entrega y referencia Git verificable. |
-| DOC01 | T19/T21 README | VD otra persona sigue comandos desde clon limpio. | README y ensayo de reproducción. |
-| DOC02, GEN01 | T19/T20/T22 RESOLUCION | VD diez apartados, evidencias reales y comprensión/justificación individual. | RESOLUCION, enlaces y reflexión. |
-
-## Actualización posterior
-
-Sustituir rutas previstas por enlaces a implementación y evidencia reales cuando
-existan. Registrar estado por requisito/prueba, comando, fecha y commit probado.
-Separar control documental de prueba funcional: P01–P11 tienen controles reales;
-P12 queda pendiente. Tener un plan o detener contenedores no aprueba P12.
-No copiar credenciales, hashes de contraseña ni conversaciones completas.
+T01/T02 contexto/diseño; T03/T05/T06 base/modelos; T07–T10 importación;
+T11–T15 autenticación/funcionalidad/demo: completas, conservadas sin refactor.
+T04/T16–T21 Docker/harness/P12/ciclo/documentos/ensayo: implementadas,
+aceptación final registrada en C tras ejecutar. T20 cubre cinco temas/dos mejoras
+reales, V1/V2/V3. T22 publicación/acceso/etiqueta/entrega: pendiente humana,
+sin acciones remotas ejecutadas. No convertir metadatos desconocidos en evidencia.

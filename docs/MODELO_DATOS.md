@@ -3,7 +3,7 @@
 Implementación de dominio: [config/domain.py](../src/config/domain.py).
 Estado: modelo/migraciones implementados; controles y resultados se registran
 en [FASE_MODELO.md](evidencias/FASE_MODELO.md). P06–P08 aprobadas: ver
-[FASE_IMPORTACION.md](evidencias/FASE_IMPORTACION.md); otros nueve P pendientes.
+[FASE_IMPORTACION.md](evidencias/FASE_IMPORTACION.md); cierre P01–P12 en FASE_CIERRE.
 
 ## Relaciones
 

@@ -1,16 +1,47 @@
 # Registro inicial de decisiones
 
 Fecha: 2026-10-04. Estado: dominio/importación y funcionalidad web implementados;
-P01–P11 automatizadas, P12 pendiente. Resultados en evidencias de cada fase.
+P01–P11 automatizadas, P12 dirigido aprobado; cierre final en FASE_CIERRE. Resultados en evidencias de cada fase.
 Autorización: solicitud del usuario de creación de contexto, posterior al análisis.
 Requisitos normativos en [REQUISITOS.md](REQUISITOS.md); evidencia del Excel en
 [ANALISIS_EXCEL.md](ANALISIS_EXCEL.md). La aprobación de arquitectura no autoriza
 implementarla durante V1. La fase posterior autorizó base/modelos/migraciones;
 la fase de importación autorizó importador completo y P06–P08. La nueva solicitud
 autoriza autenticación, roles, mantenimientos, UI, demo y P01–P05/P09–P11.
-P12 y entrega final permanecen pendientes; no se autoriza push/tag.
+La solicitud final autoriza P12/Docker/harness/documentación. Publicación y
+acceso GitHub permanecen pendientes; no se autoriza push/tag.
 
 ## Cómo interpretar este registro
+
+## Cierre autorizado — decisiones previas a implementar
+
+Base: 140af56c804ef4086637c1ea2c2af404e5b14327, main, 2026-10-04.
+La nueva solicitud autoriza Docker definitivo, P12, harness y documentación;
+prevalece sobre los límites históricos de las fases anteriores. No push/tag.
+
+- D26: Dockerfile final conserva versiones/digests y código aprobado, copia
+  fuentes de datos inmutables y recolecta estáticos; usuario no root. Compose
+  final db/init/web: PostgreSQL autenticado, volumen, healthcheck, migraciones
+  antes de web. Importación/demo explícitas; nunca reset automático. Solo web
+  publica localhost:8000. Configuración por variables y .env.example pública.
+- D27: verify.sh usa exclusivamente .env.example y valores sintéticos públicos
+  definidos por el harness, proyecto/volumen nuevos separados por ejecución,
+  puerto de verificación 18000. No lee .env ni reutiliza la base normal. Ejecuta
+  una suite completa, doble importación/demo, HTTP real y P12. Conserva volumen.
+- D28: P12 crea Empresa sintética de código controlado, compara PK/nombre y
+  conteos antes/después de stop y up --force-recreate de db/init/web. Verifica
+  cambio de IDs de contenedores y conservación del volumen/dato. No down -v.
+- D29: PDF por nombre/ubicación parece material del parcial; §7 exige el Excel,
+  no ese PDF. Se conserva sin leer contenido/modificar/incluir en commit; regla
+  explícita en .gitignore evita que bloquee el árbol de entrega limpio.
+- D30: documentación final con matriz completa y auditoría sin adjudicar nota;
+  acceso GitHub, publicación/etiqueta e identidad/metadatos no comprobables
+  quedan explícitos. No inventar nombre completo ni versión exacta de IA.
+
+Respaldo: ENUNCIADO §4–§8. Referencias oficiales:
+[orden de arranque](https://docs.docker.com/compose/how-tos/startup-order/),
+[volúmenes](https://docs.docker.com/engine/storage/volumes/).
+
 
 - Requisito (R): obligación del enunciado, con sección e ID verificables.
 - Decisión (D): elección para cumplir un requisito; no atribuible al enunciado.

@@ -15,7 +15,7 @@ adicionales no justificadas por el enunciado.
 Estado: base Django, 14 modelos, cuatro migraciones iniciales e importador modular
 implementados. Autorización actual: funcionalidad HTTP completa, demo y
 P01–P05/P09–P11; importador/P06–P08 conservados. Web con formularios/plantillas,
-roles, filtros/ficha y responsables; P12 queda pendiente. V2/V3 registran dos
+roles, filtros/ficha y responsables; P12 y Docker final autorizados en fase de cierre; evidencia en FASE_CIERRE. V2/V3 registran dos
 actualizaciones reales; V1 es histórico. No crear V4 para el mero avance funcional.
 
 ## Fuentes y confianza
@@ -170,8 +170,9 @@ credenciales de proveedores o llaves. No modificar ENUNCIADO.md ni el Excel.
 No eliminar archivos existentes ni ejecutar operaciones destructivas. En futuras
 pruebas, aislar datos y cualquier reinicio destructivo del entorno de evaluación.
 No inventar evidencias, modelos/versiones de IA, resultados ni pruebas aprobadas.
-La fase actual autoriza login/logout, roles, mantenimientos, UI, demo y pruebas
-P01–P11 sobre datos aislados. No rehacer modelos/importador ni cerrar P12 todavía.
+La solicitud vigente autoriza cierre: Docker definitivo, P12, harness único,
+documentación/rúbrica y commits locales. Mantener modelo/importador/auth/UI.
+No push/tag. Ensayo en clon limpio y configuración sintética sin leer .env.
 Durante desarrollo usar pruebas dirigidas; una ejecución completa al finalizar.
 
 Comandos ACTUALES de modelos, documentados en README:
@@ -204,33 +205,43 @@ web conecta además a una red bridge de interfaz para el puerto local; db/modelo
 solo siguen en la red internal. verify-web-local comprueba publicación y redirección
 desde el anfitrión Docker, sin leer ni imprimir tokens ni datos privados.
 
-Contrato FUTURO del despliegue final; todavía no existen compose.yaml, init,
-verify.sh ni verify-persistence.sh. import_catalog y seed_demo ya existen.
-WORKDIR de imagen: /app/src; ruta Excel final prevista: /app/data/CatalogoServicios.xlsx.
+## Contrato FINAL de despliegue y verificación
+
+Dockerfile/compose.yaml son definitivos; archivos .modelos solo reproducen
+fases históricas. WORKDIR /app/src; Excel /app/data/CatalogoServicios.xlsx ro.
+Docker Engine 28.3.3/Compose 2.39.1 comprobados; README incluye configuración local.
+No leer .env reales; el agente verifica con .env.example/valores sintéticos.
 
 ~~~bash
 docker compose up --build -d
-docker compose run --rm init
-docker compose exec web python manage.py import_catalog --file /app/data/CatalogoServicios.xlsx
-docker compose exec web python manage.py seed_demo
-docker compose exec web python manage.py check
-docker compose exec web python manage.py makemigrations --check --dry-run
+docker compose exec -T web python manage.py import_catalog --file /app/data/CatalogoServicios.xlsx
+docker compose exec -T web python manage.py seed_demo
+docker compose exec -T web python manage.py check
+docker compose exec -T web python manage.py makemigrations --check --dry-run
 bash scripts/verify.sh
 bash scripts/verify-persistence.sh
-docker compose logs web db
-docker compose down
+docker compose logs web init db
+docker compose stop
+docker compose up -d
 ~~~
 
-init ejecutará migraciones; importación y demo serán explícitas e idempotentes.
-Los scripts del anfitrión solo orquestarán Docker; validación y procesamiento
-se ejecutarán en contenedores. verify.sh aislará pruebas y devolverá 0 al aprobar
-y un código distinto de 0 al fallar; no prueba la base de evaluación.
+init migra antes de web; healthchecks comprueban BD/HTTP. Imagen no root,
+estáticos en build, PostgreSQL con contraseña local/volumen, solo web publica
+localhost. Import/demo explícitas; nunca reset automático. Sin IA en runtime.
+verify.sh construye entorno nuevo catalogo-qa-TIMESTAMP-PID, usa solo fixtures
+públicas, no .env, ejecuta checks/import/demo/HTTP, una suite de 165/P01–P11 y
+P12 operativo. Código 0/no-0 inequívoco, duración y proyecto; stop final conserva
+volumen. P12 exige dato/PK/conteos idénticos, IDs db/web nuevos y mismo volumen.
+No ejecutar down -v/drop. Pruebas test_catalogo_final separadas y rollback.
+Quinto prompt P05 y RESOLUCION/rúbrica/matriz finales; no nuevo contexto V4.
+PDF no requerido preservado fuera de Git/build. Metadatos y acceso/entrega
+remotos se confirman manualmente; no inventar nombre completo/versión exacta.
 
 ## Estado de aceptación P01–P12
 
 P01–P11 están automatizadas; resultados dirigidos y finales en FASE_FUNCIONAL.
 P06–P08 conservan su aprobación previa y se verifican como regresiones.
-P12 está PENDIENTE. Las pruebas internas no sustituyen aceptación oficial.
+P12 dirigido aprobado; cierre global y resultado final en FASE_CIERRE. Las pruebas internas no sustituyen aceptación oficial.
 
 | ID | Resultado esperado |
 |---|---|
@@ -250,5 +261,6 @@ P12 está PENDIENTE. Las pruebas internas no sustituyen aceptación oficial.
 Documentar comandos, fecha, commit y resultados reales; verificar interfaz con
 ambos roles cuando exista UI. V2/V3 registran dos hallazgos y actualizaciones.
 Registrar prompts usados y correcciones: P03_REVISION_INTEGRIDAD y
-P04_REVISION_SESIONES son mejoras por fallos reales; cuatro temas usados.
-Falta el quinto tema pruebas/Docker y versión exacta disponible de IA.
+P04_REVISION_SESIONES son mejoras por fallos reales; cinco temas usados.
+P05 prueba/Docker/cierre registrado. Familia disponible GPT-6; versión exacta
+PENDIENTE DE REGISTRAR MANUALMENTE. Entrega/acceso GitHub pendientes del usuario.

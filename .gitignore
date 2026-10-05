@@ -46,3 +46,6 @@ target/
 *.key
 *.pfx
 *.p12
+
+# Material del parcial no exigido como entregable; conservar localmente.
+data/201907608_P2_SA.pdf

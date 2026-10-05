@@ -2,7 +2,8 @@
 
 Fuente normativa: [ENUNCIADO.md](../ENUNCIADO.md), secciones 1–10.
 Fecha de registro: 2026-10-04, America/Guatemala.
-Estado: modelo/importación implementados; P06–P08 aprobadas; otros nueve pendientes.
+Estado: funcionalidad completa; P01–P11 y P12 dirigido aprobados; cierre final
+registrado en FASE_CIERRE. Acceso/publicación/entrega GitHub pendientes humanos.
 Los IDs son etiquetas de trazabilidad, no requisitos adicionales.
 Decisiones aprobadas e inferencias: [DECISIONES.md](DECISIONES.md).
 
@@ -79,7 +80,8 @@ Organización y responsables son requisitos nuevos; no existen como datos del Ex
 P01–P12 y sus resultados esperados están en
 [AGENTS.md](../AGENTS.md#estado-de-aceptación-p01p12); su implementación, prueba y
 evidencia futuras se relacionan en [MATRIZ_TRAZABILIDAD.md](MATRIZ_TRAZABILIDAD.md).
-Solo P06/P07/P08 se ejecutaron y aprobaron; evidencia en FASE_IMPORTACION.
+P01–P12 se relacionan individualmente en la matriz; evidencias reales en
+FASE_IMPORTACION, FASE_FUNCIONAL y FASE_CIERRE.
 
 ## GitHub y documentación
 

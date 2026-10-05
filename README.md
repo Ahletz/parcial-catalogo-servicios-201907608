@@ -1,188 +1,200 @@
-# Catálogo de servicios — aplicación funcional
+# Catálogo de servicios — Software Avanzado
 
-Proyecto individual de Software Avanzado. Nombre/carné del integrante:
-pendientes de confirmar para la entrega. Contexto inicial: f5f39e3.
+Proyecto individual: parcial-catalogo-servicios-201907608. Carné: **201907608**.
+Autor: **Aheltz** (nombre configurado en Git; nombre completo PENDIENTE DE CONFIRMAR).
+Repositorio: https://github.com/Ahletz/parcial-catalogo-servicios-201907608.
 
-Estado actual: login/logout local, roles en servidor, mantenimientos de
-organización/usuarios/N1/N2/clasificaciones, filtros/paginación, ficha completa,
-responsables, importador y demo idempotente. P01–P11 automatizadas; P12 pendiente.
-Este entorno no sustituye el
-despliegue final requerido con docker compose up --build -d.
+Aplicación para mantener catálogo de servicios, organización y usuarios.
+Autenticación local, roles ADMINISTRADOR/CONSULTA, bajas lógicas, búsqueda,
+filtros, paginación y responsables. Monolito Django 5.2.17/Python 3.13.16,
+PostgreSQL 17.11, Gunicorn y WhiteNoise; openpyxl importa el Excel original.
+No requiere cuentas de IA ni claves de proveedores para funcionar.
 
-## Ejecutar esta fase
+## Flujo FINAL de evaluación
 
-Requisitos del anfitrión: Docker Engine y Docker Compose V2; Bash para el script.
-Verificado con Engine 28.3.3 y Compose 2.39.1. No necesita Python, Django,
-PostgreSQL ni dependencias instalados fuera de contenedores.
+Los archivos definitivos son **Dockerfile y compose.yaml**. Los archivos
+Dockerfile.modelos/compose.modelos.yaml se conservan para reproducir evidencia
+histórica; no son necesarios para levantar la entrega final.
 
-## Revisar la aplicación local
-
-Copiar .env.example a .env y configurar localmente DEMO_ADMIN_PASSWORD y
-DEMO_CONSULTA_PASSWORD con contraseñas de demostración distintas y no triviales.
-Los identificadores predeterminados son admin.demo y consulta.demo; se pueden
-cambiar mediante DEMO_ADMIN_IDENTIFICADOR/DEMO_CONSULTA_IDENTIFICADOR.
-Nunca versionar .env. Esta vista usa el Compose interno y datos de demostración;
-el despliegue final con configuración propia y P12 corresponde al cierre.
+Requisitos del anfitrión: Git, Docker Engine y Compose V2. Bash para el harness
+(en Windows, WSL o Git Bash). Versiones comprobadas: Engine 28.3.3 y Compose
+2.39.1; no se afirma compatibilidad de versiones anteriores no probadas.
+No instalar Python, Django ni PostgreSQL en el anfitrión.
 
 ~~~bash
-docker compose --env-file .env -f compose.modelos.yaml build modelos
-docker compose --env-file .env -f compose.modelos.yaml up -d db
-docker compose --env-file .env -f compose.modelos.yaml run --rm modelos python manage.py migrate --noinput
-docker compose --env-file .env -f compose.modelos.yaml run --rm modelos python manage.py import_catalog --file /app/data/CatalogoServicios.xlsx
-docker compose --env-file .env -f compose.modelos.yaml run --rm modelos python manage.py seed_demo
-docker compose --env-file .env -f compose.modelos.yaml --profile funcional up --build -d web
+git clone https://github.com/Ahletz/parcial-catalogo-servicios-201907608.git
+cd parcial-catalogo-servicios-201907608
+cp .env.example .env
 ~~~
 
-URL: http://localhost:8000/login/. Entrar con cada identificador y la contraseña
-configurada localmente. ADMINISTRADOR puede crear/editar/desactivar; CONSULTA
-solo lee. Usuario y rol aparecen en la cabecera. Logout es POST con CSRF;
-sesiones previas de inactivos se invalidan al intentar acceso protegido.
+Editar .env **localmente** antes del primer arranque:
 
-La organización mantiene Empresa → Área → Departamento → Sección → Puesto →
-Usuario. Los formularios no permiten huérfanos ni padres inactivos; las bajas
-bloquean dependencias activas/desconocidas y conservan información histórica.
-Servicios permite código/nombre, N1/estado/clase/criticidad/tipo y paginación de
-20 registros. Estado desconocido es distinto de inactivo. La ficha muestra
-todos los atributos; los responsables se editan en el formulario del servicio.
+| Variable | Configuración |
+|---|---|
+| DJANGO_SECRET_KEY | Valor local aleatorio; reemplazar CONFIGURAR_LOCALMENTE. |
+| DB_PASSWORD | Contraseña local de PostgreSQL; reemplazar placeholder. |
+| DEMO_ADMIN_PASSWORD / DEMO_CONSULTA_PASSWORD | Contraseñas exclusivamente demo, distintas, no triviales; reemplazar placeholders. |
+| DEMO_ADMIN_IDENTIFICADOR / DEMO_CONSULTA_IDENTIFICADOR | admin.demo / consulta.demo por defecto. |
+| DB_NAME / DB_USER | catalogo / catalogo; fijar antes de crear el volumen. |
+| DJANGO_DEBUG | false. |
+| DJANGO_ALLOWED_HOSTS | localhost,127.0.0.1 para acceso local. |
+| DJANGO_SECURE_COOKIES | false para HTTP local; true solo al servir HTTPS. |
+| APP_PORT | 8000 por defecto; cambiar si está ocupado. |
 
-seed_demo crea cinco unidades y dos roles, y asigna tres importados disponibles.
-Repetirlo no rota contraseñas, no sobrescribe asignaciones ni reactiva bajas.
-Si faltan importados sin asignación, falla con rollback e indica importar primero.
-Una cuenta demo existente con otro rol/puesto/estado requiere revisión explícita.
-Para cambiar una contraseña existente, editar el usuario como administrador o
-usar el comando Django changepassword; dejarla vacía en edición la conserva.
+No versionar .env ni publicar sus valores. Docker Compose suministra variables;
+Django no abre .env. No cambiar DB_PASSWORD/DB_USER sobre un volumen ya
+inicializado esperando que se reconfigure PostgreSQL: requiere gestión explícita.
+No usar docker compose config sin --quiet para evitar mostrar configuración.
 
 ~~~bash
-docker compose --env-file .env -f compose.modelos.yaml logs web db
-docker compose --env-file .env -f compose.modelos.yaml --profile funcional stop
+docker compose up --build -d
 ~~~
 
-Para iniciar de nuevo sin borrar datos: up -d db y --profile funcional up -d web
-con los mismos archivos/variables. Este procedimiento aún no constituye P12.
+Este comando construye desde el código del repositorio, espera PostgreSQL healthy,
+ejecuta migraciones en init y después inicia web. collectstatic se ejecuta al
+construir la imagen; Gunicorn sirve la aplicación y WhiteNoise el CSS con DEBUG=false.
+Web usa usuario no root. URL: **http://localhost:8000/login/**.
+Solo localhost publica 8000; PostgreSQL no publica puerto al anfitrión.
 
-## Verificación funcional completa
+Importación y cuentas demo son pasos explícitos, sin reset automático:
 
 ~~~bash
-bash scripts/verify-funcional.sh
-bash scripts/verify-web-local.sh
+docker compose exec -T web python manage.py migrate --noinput
+docker compose exec -T web python manage.py import_catalog --file /app/data/CatalogoServicios.xlsx
+docker compose exec -T web python manage.py seed_demo
 ~~~
 
-El script fuerza .env.example pública, sin leer .env reales; construye, migra,
-comprueba fuentes/configuración/dependencias y migraciones pendientes. Ejecuta
-39 pruebas HTTP/demo dirigidas y una única invocación completa de las 165 pruebas,
-incluidas las 126 anteriores y P01–P11. Devuelve 0 solo si todo pasa.
-Durante desarrollo ejecutar únicamente el módulo/método afectado con manage.py
-test y --keepdb; no repetir la suite completa tras cada cambio.
+La migración explícita es repetible; init ya la aplicó en el arranque. Entrar
+con admin.demo o consulta.demo y su contraseña configurada localmente.
+Administrador mantiene usuarios, jerarquía, N1/N2, clase, criticidad y tipo.
+Consulta solo lee: las escrituras directas reciben HTTP 403. Logout es POST
+con CSRF; cuentas inactivas y cookies anteriores invalidadas se rechazan.
 
-Además crea test_funcional_evidencia_UUID, importa el original, ejecuta seed_demo
-dos veces y comprueba HTTP real con Gunicorn, CSS local, ambos roles, CSRF,
-escrituras y cookie tras logout. Sus credenciales sintéticas son efímeras y no
-se imprimen. Base y volumen se conservan; ninguna prueba escribe en catalogo_modelos.
-Las pruebas Django usan test_catalogo_modelos y rollback. La UI de revisión
-local utiliza catalogo_modelos; no es la base de los tests.
-verify-web-local comprueba el perfil publicado desde el anfitrión Docker:
-login/CSS 200 y acceso anónimo 302, sin imprimir tokens ni modificar registros.
-Solo web participa además en una red de interfaz para publicar localhost:8000;
-PostgreSQL y el runner de pruebas conservan la red interna.
+El original importa 12 N1, 46 N2 y 18 opciones (2/5/11). Reimportar conserva
+identidades y ediciones humanas divergentes, genera nueva trazabilidad y resumen
+creados/actualizados/omitidos/observados. No modifica el Excel, montado ro.
+seed_demo crea cinco unidades, dos roles y tres asignaciones válidas. Repetir
+no duplica, no rota contraseñas ni sobrescribe asignaciones humanas. Para cambiar
+una contraseña existente usar mantenimiento de usuario o changepassword.
 
-Pruebas de modelo/importación anteriores, si se necesitan por cambios en esas capas:
+## Pruebas y harness final
 
 ~~~bash
-bash scripts/verify-modelos.sh
-bash scripts/verify-importacion.sh
+bash scripts/verify.sh
 ~~~
 
-Ambos scripts construyen Python 3.13, inician PostgreSQL 17 aislado y verifican
-fuentes/dependencias/configuración/migraciones. verify-modelos ejecuta sus 63
-regresiones; verify-importacion ejecuta 60 controles de parser/persistencia,
-P06/P07/P08 individualmente y dos invocaciones CLI en una BD test_ nueva.
-Devuelven 0 si todos los controles pasan; cualquier fallo detiene con no 0.
-El original está montado de solo lectura; su SHA-256 se verifica antes/después.
+Rutina única: configuración pública sintética, proyecto catalogo-qa-TIMESTAMP-PID,
+volumen independiente, PostgreSQL autenticado, migraciones, fuentes, pip check,
+Django check, comprobación de migraciones, dos importaciones/demo, HTTP real,
+UNA suite completa de 165 tests y P12. Publica temporalmente localhost:18000;
+dejar ese puerto libre. Devuelve 0 solo si todo pasa; un fallo retorna distinto
+de 0 y no se presenta como aprobación. Detiene contenedores al terminar y
+conserva su volumen/base. Nunca lee .env real ni opera el volumen de evaluación.
 
-También puede ejecutarse cada comando del script por separado. Para generar
-migraciones ante cambios futuros autorizados, usar la identidad del anfitrión:
+P01–P11 son métodos Django en PostgreSQL test_catalogo_final, aislados mediante
+transacciones; no se ejecutan sobre la base de evaluación. P12 es una prueba
+operativa adicional: crea Empresa controlada, stop, up --force-recreate de
+PostgreSQL/web, comprueba IDs diferentes, mismo volumen y mismo dato/PK/conteos.
+Son **165 tests Django + un escenario operativo P12**, no 166 métodos Django.
+
+P12 independiente, sin repetir la suite:
 
 ~~~bash
-docker compose -f compose.modelos.yaml run --rm --user "$(id -u):$(id -g)" modelos python manage.py makemigrations organization accounts catalog imports
-docker compose -f compose.modelos.yaml run --rm modelos python manage.py migrate --noinput
-docker compose -f compose.modelos.yaml run --rm modelos python manage.py makemigrations --check --dry-run
-docker compose -f compose.modelos.yaml run --rm modelos python manage.py test tests.test_models --keepdb --verbosity 2
-docker compose -f compose.modelos.yaml logs db
-docker compose -f compose.modelos.yaml stop
+bash scripts/verify-persistence.sh
 ~~~
 
-PostgreSQL no publica puertos; el perfil funcional publica solo localhost:8000.
-El volumen
-catalogo-modelos-201907608_datos_modelos conserva las bases catalogo_modelos y
-test_catalogo_modelos; las pruebas usan únicamente esta última y transacciones
-de rollback. --keepdb evita eliminarla al finalizar. No usar down -v ni apuntar
-esta configuración a datos de evaluación.
-
-## Importación y consulta de evidencia
-
-Comando funcional disponible, para la base configurada en el contenedor:
+Crea su propio entorno sintético y lo deja iniciado para inspección. Para
+reutilizar el proyecto mostrado y detenerlo:
 
 ~~~bash
-docker compose -f compose.modelos.yaml run --rm modelos python manage.py import_catalog --file /app/data/CatalogoServicios.xlsx
+export QA_PROJECT=catalogo-qa-TIMESTAMP-PID
+source scripts/verify-common.sh
+qa_compose stop
 ~~~
 
-Las verificaciones automatizadas no usan la base normal para importar datos de
-prueba. Las pruebas Django usan test_catalogo_modelos y rollback. La demostración
-CLI crea test_importacion_evidencia_UUID, migra allí y ejecuta dos importaciones;
-conserva la base y muestra su nombre exacto junto con resultados/contadores.
-Cada repetición genera otra base test_ sin borrar las anteriores.
-
-Para consultar posteriormente esa evidencia, sustituir UUID_DEL_REPORTE por el
-nombre mostrado y ejecutar mediante el mismo Compose:
+Pruebas dirigidas durante futuros cambios (solo el módulo afectado):
 
 ~~~bash
-IMPORT_DB=test_importacion_evidencia_UUID_DEL_REPORTE
-docker compose -f compose.modelos.yaml run --rm -e DB_NAME="$IMPORT_DB" -e DB_TEST_NAME=test_consulta_evidencia modelos python manage.py shell -c "from imports.models import EjecucionImportacion, RegistroOrigen, IncidenciaImportacion; print(EjecucionImportacion.objects.count(), RegistroOrigen.objects.count(), IncidenciaImportacion.objects.count())"
+docker compose run --rm runner python manage.py test tests.test_web_acceptance --keepdb --verbosity 2
+docker compose exec -T web python manage.py check
+docker compose exec -T web python manage.py makemigrations --check --dry-run
 ~~~
 
-Primera importación original: 12 N1, 46 N2, 18 opciones creadas, cuatro unidades
-observadas/cuatro incidencias. Segunda: cero creados/actualizados, 76 omitidos,
-cuatro observados/cuatro incidencias nuevas. Dos ejecuciones dejan 152 orígenes
-y ocho incidencias; los contadores distinguen entidades y 97 filas físicas.
+Resultados verificables y commit probado: [FASE_CIERRE](docs/evidencias/FASE_CIERRE.md).
+Las rutinas históricas de modelos/importación/funcionalidad se conservan para
+reproducir sus fases; no ejecutarlas todas como parte del cierre actual.
 
-Arquitectura: parser lee bytes/hoja/celdas y clasifica filas; normalizer aplica
-NULL/S/N/Decimal, opciones y reglas SE.12/prefijo; importer reconcilia y persiste
-atómicamente; traceability escribe snapshots/incidencias; el comando solo
-orquesta y muestra JSON. Los servicios están en src/imports/services.
+## Logs, apagado, reinicio y recuperación
 
-Las ediciones humanas divergentes se conservan comparando por campo contra el
-último snapshot IMPORTADO, y se registran nueva fuente/valor actual/incidencia.
-No se modifican asignaciones organizacionales ni se reactivan N1/catálogos.
-Los fallos revierten datos funcionales y conservan ejecución FALLIDA/incidencia.
+~~~bash
+docker compose ps
+docker compose logs --tail 100 web init db
+docker compose stop
+docker compose up -d
+~~~
 
-La red interna de revisión usa autenticación trust para sus datos sintéticos.
-El despliegue final tendrá configuración independiente mediante variables locales
-según [.env.example](.env.example). Django nunca lee archivos .env por sí mismo.
-La clave sintética del Compose solo pertenece a este entorno aislado.
+Apagado normal alternativo: docker compose down **sin -v**. Conserva el volumen
+catalogo-servicios-201907608_datos_postgres; up --build -d recrea contenedores y
+recupera los datos. Detener/recrear no vuelve a importar ni cambia contraseñas.
+Para actualizar código, repetir up --build -d: init aplica migraciones pendientes.
+Si el puerto está ocupado cambiar APP_PORT; si init falla revisar logs init y
+configuración local antes de repetir up. No resolver fallos borrando el volumen.
+La persistencia evita pérdida por recreación; no constituye copia de seguridad.
 
-## Dominio y documentación
+**Procedimiento destructivo, exclusivamente sobre un proyecto de pruebas
+prescindible:** borra todos sus datos; nunca usar en P12 ni sobre evaluación.
+Se documenta por §5, no se ejecuta en esta entrega.
 
-- [AGENTS.md](AGENTS.md): contexto vigente, límites y comandos.
-- [DECISIONES.md](docs/DECISIONES.md): cierre PD01–PD09.
-- [MODELO_DATOS.md](docs/MODELO_DATOS.md): esquema y restricciones.
-- [MATRIZ_TRAZABILIDAD.md](docs/MATRIZ_TRAZABILIDAD.md): avance parcial y aceptación pendiente.
-- [CONTEXTO_V2.md](docs/contexto/CONTEXTO_V2.md): hallazgos reales que amplían V1.
-- [CONTEXTO_V3.md](docs/contexto/CONTEXTO_V3.md): integridad efectiva de evidencia.
-- [FASE_MODELO.md](docs/evidencias/FASE_MODELO.md): comandos, resultados, fallos y commit probado.
-- [FASE_IMPORTACION.md](docs/evidencias/FASE_IMPORTACION.md): importaciones, P06–P08 y correcciones.
-- [FASE_FUNCIONAL.md](docs/evidencias/FASE_FUNCIONAL.md): HTTP/demo, P01–P05/P09–P11 y correcciones.
+~~~bash
+docker compose --env-file .env.example -f compose.yaml -p PROYECTO_DE_PRUEBAS_CONFIRMADO down -v
+~~~
 
-Escribir mediante save()/objects.create() y desactivar() en modelos de dominio.
-update/bulk_create/bulk_update/delete se rechazan para evitar omitir reglas.
-SQL directo/save_base no son APIs de negocio autorizadas; las pruebas los usan
-deliberadamente solo para verificar constraints locales en test_.
+Configurar las mismas variables sintéticas del harness antes de ese comando.
+El proyecto debe identificarse y revisarse explícitamente; el apagado normal
+siempre conserva volúmenes.
 
-Hay 165 pruebas distintas: 126 anteriores y 39 nuevas HTTP/demo, con ocho
-oficiales nuevas. P06/P07/P08 usan el original y son regresiones de esta fase;
-P12 es el único escenario oficial pendiente. El contrato del lector está limitado a
-Servicios Externos/A4:L4/5–101/E112:H122. Fórmulas en esas regiones se rechazan
-sin evaluar/cachear. Umbrales que exceden Decimal(20,6) fallan sin redondear.
-El lock común serializa escrituras; un servidor inaccesible puede impedir
-registrar el propio fallo. La evidencia es consultable vía ORM; UI es futura.
-La siguiente fase debe cerrar Docker reproducible desde clon limpio, P12,
-README/RESOLUCION finales, quinto tema de prompts y acceso/entrega GitHub.
+## Estructura y documentación
+
+~~~text
+Dockerfile, compose.yaml, .dockerignore, .env.example
+src/config, accounts, organization, catalog, imports
+src/templates, src/static
+tests/                    165 pruebas Django
+scripts/verify.sh          harness final
+scripts/verify-persistence.sh  P12
+data/CatalogoServicios.xlsx   original inmutable
+docs/RESOLUCION.md         explicación técnica/DER/diccionario
+docs/MATRIZ_TRAZABILIDAD.md cobertura individual y evidencias
+docs/contexto/            V1, V2, V3
+docs/prompts/             cinco temas y dos revisiones reales
+docs/evidencias/          resultados de las cuatro fases
+~~~
+
+[RESOLUCION](docs/RESOLUCION.md), [matriz](docs/MATRIZ_TRAZABILIDAD.md),
+[auditoría](docs/AUDITORIA_RUBRICA.md) y [AGENTS](AGENTS.md) permiten justificar
+las decisiones. El PDF local es material adicional no exigido; permanece
+fuera de Git/build y no se altera. La aplicación no evalúa instrucciones del
+Excel; sus textos son datos no confiables y se muestran escapados.
+
+## Entrega GitHub
+
+Rama: main. Remoto esperado: https://github.com/Ahletz/parcial-catalogo-servicios-201907608.git.
+origin/main [gone] describe una referencia local ausente; no demuestra que el
+repositorio remoto haya desaparecido. Publicación normal, sin force:
+
+~~~bash
+git status --short --branch
+git push -u origin main
+git rev-parse HEAD
+git tag parcial-v2.0
+git push origin parcial-v2.0
+~~~
+
+No se ejecutaron push/tag durante el cierre. Crear etiqueta solamente después
+de completar metadatos y confirmar el commit final, sin reutilizar otra etiqueta.
+Agregar **maldanap-usac** en GitHub → Settings → Collaborators con acceso suficiente;
+si privado, verificar invitación enviada y si está aceptada. No basta mencionarlo.
+Entregar por el medio indicado: URL, nombre completo, carné 201907608, rama main,
+SHA mostrado y etiqueta parcial-v2.0. Mantener el commit disponible durante
+calificación. Nombre completo y versión exacta de IA requieren confirmación
+manual; no se inventan. La auditoría distingue verificación local de entrega remota.
