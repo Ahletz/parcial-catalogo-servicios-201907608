@@ -1,0 +1,48 @@
+# Variables de entorno
+.env
+.env.*
+!.env.example
+
+# Dependencias
+node_modules/
+vendor/
+.venv/
+venv/
+
+# Builds
+dist/
+build/
+bin/
+obj/
+
+# IDE
+.vscode/
+.idea/
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Cobertura
+coverage/
+.coverage
+
+# Temporales
+tmp/
+temp/
+
+# Python
+__pycache__/
+*.py[cod]
+
+# Java
+target/
+
+# Secretos / certificados
+*.pem
+*.key
+*.pfx
+*.p12
