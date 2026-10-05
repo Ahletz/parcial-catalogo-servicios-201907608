@@ -2,7 +2,7 @@
 
 Fuente normativa: [ENUNCIADO.md](../ENUNCIADO.md), secciones 1–10.
 Fecha de registro: 2026-10-04, America/Guatemala.
-Estado: requisitos identificados; implementación y pruebas pendientes.
+Estado: implementación parcial del modelo; aceptación P01–P12 pendiente.
 Los IDs son etiquetas de trazabilidad, no requisitos adicionales.
 Decisiones aprobadas e inferencias: [DECISIONES.md](DECISIONES.md).
 

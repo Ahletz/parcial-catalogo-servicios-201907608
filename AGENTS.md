@@ -1,4 +1,4 @@
-# Contexto operativo del proyecto — V1
+# Contexto operativo del proyecto — V2
 
 ## Propósito, alcance y estado
 
@@ -12,9 +12,11 @@ trazable, persistencia, Docker y evidencia de las tres ingenierías con IA.
 Fuera de alcance: tickets, facturación, consumo de servicios y funcionalidades
 adicionales no justificadas por el enunciado.
 
-Estado: solo documentación inicial; no existen aplicación, modelos, migraciones,
-importador, Docker ni pruebas. P01–P12 no se han ejecutado. Esta fase no autoriza
-implementarlos. V1 no cuenta como las dos actualizaciones futuras obligatorias.
+Estado: base Django, 14 modelos de dominio, cuatro migraciones iniciales,
+configuración PostgreSQL/Argon2id y pruebas internas implementados. El usuario
+autorizó esta fase de base/modelo; no importador completo, interfaz ni vistas de
+login/logout. P01–P12 permanecen sin ejecutar. V2 registra una actualización
+real; V3 sigue pendiente. V1 es histórico, no una actualización.
 
 ## Fuentes y confianza
 
@@ -38,19 +40,20 @@ Leer este archivo, [REQUISITOS.md](docs/REQUISITOS.md),
 [ANALISIS_EXCEL.md](docs/ANALISIS_EXCEL.md),
 [DECISIONES.md](docs/DECISIONES.md) y
 [MATRIZ_TRAZABILIDAD.md](docs/MATRIZ_TRAZABILIDAD.md). Consultar el enunciado ante
-dudas. [CONTEXTO_V1.md](docs/contexto/CONTEXTO_V1.md) explica fuentes y selección.
+dudas. [CONTEXTO_V2.md](docs/contexto/CONTEXTO_V2.md) registra fuentes y hallazgos;
+[CONTEXTO_V1.md](docs/contexto/CONTEXTO_V1.md) conserva el estado histórico.
 
 Monolito modular: Python 3.13, Django 5.2 LTS, PostgreSQL 17, Gunicorn,
 WhiteNoise, openpyxl y Docker Compose. Fijar versiones exactas al implementar;
 no usar etiquetas latest ni dependencias flotantes como contrato reproducible.
 
-Estructura futura: src/config, src/accounts, src/organization, src/catalog,
-src/imports, src/templates, src/static, tests, scripts y docs/evidencias.
+Estructura actual: src/config, src/accounts, src/organization, src/catalog,
+src/imports, tests, scripts y docs/evidencias. Templates/static e interfaz son futuros.
 config configura; accounts autentica/autoriza; organization mantiene la
 jerarquía; catalog mantiene servicios; imports carga y registra procedencia.
 La aplicación final funciona sin suscripción de IA ni claves de modelos.
 
-## Modelo conceptual y reglas organizacionales
+## Modelo persistente y reglas organizacionales
 
 Empresa → Área → Departamento → Sección → Puesto → Usuario.
 Cada subordinado tiene un padre obligatorio; un puesto admite varios usuarios.
@@ -59,12 +62,12 @@ nombre, estado y padre; código único dentro de ese padre. Usuario: ID, nombre,
 usuario o correo único, hash, rol, estado y puesto. Derivar su empresa de la
 jerarquía; no almacenar una segunda relación contradictoria.
 
-ServicioN1 tiene código/nombre; ServicioN2 tiene código/nombre, N1 obligatorio,
+ServicioNivel1 tiene código/nombre/estado; ServicioNivel2 tiene código/nombre, N1 obligatorio,
 activo, clase, criticidad, tipo, descripción, métrica, mínimo y máximo. Cada
 código es único en su entidad. Clase, Criticidad y Tipo son catálogos mantenibles.
-ServicioN2 se relaciona con sección y, opcionalmente, usuario responsable.
-Planear registros separados de ejecución de importación, origen e incidencia.
-Este modelo es conceptual: no crear modelos ni migraciones en esta fase.
+ServicioNivel2 se relaciona con sección y, opcionalmente, usuario responsable.
+EjecucionImportacion, RegistroOrigen e IncidenciaImportacion separan evidencia.
+Consultar [MODELO_DATOS.md](docs/MODELO_DATOS.md) para campos/constraints actuales.
 
 No aceptar huérfanos ni asociaciones nuevas con padres inactivos. Validar también
 movimientos de usuarios/puestos que puedan invalidar asignaciones. Las relaciones
@@ -83,8 +86,11 @@ corresponda, mediante restricciones de base de datos.
   Importados pueden quedar sin asignación; demo tendrá al menos tres válidas.
 - Bajas lógicas, sin cascadas silenciosas: bloquear dependencias activas que
   deban resolverse explícitamente y conservar relaciones históricas.
-- Un activo desconocido nunca equivale a inactivo. Los detalles de desactivación,
-  campos obligatorios y login aún por cerrar están en DECISIONES.md.
+- Un activo desconocido nunca equivale a inactivo. PD01–PD09 están resueltos:
+  N2 MANUAL exige sección; IMPORTADO permite ausencia; activo es su único estado.
+- save() ejecuta full_clean dentro de transacción con advisory lock PostgreSQL;
+  update/bulk_create/bulk_update/delete se rechazan. Usar desactivar() explícito.
+  No bypass mediante SQL/save_base en negocio; pruebas SQL lo hacen solo en test_.
 
 ## Importación y reimportación
 
@@ -103,14 +109,17 @@ corresponda, mediante restricciones de base de datos.
 - E:L ausentes en filas 99–101 permanecen NULL/desconocidos. No inventar clase,
   criticidad, tipo, métrica, activo ni ceros. Preservar Demostration y demás
   etiquetas/nombres originales.
-- Registrar hoja, filas/rangos, valores originales y transformaciones. Detectar
-  conflictos de atributos y aplicar una regla documentada, aún pendiente de
-  cerrar para conflictos N2 no presentes en el original.
+- Registrar hoja, filas/rangos, valores originales y transformaciones. En conflicto
+  N2: valor no vacío principal primero; si ausente, primera no vacía por fila de
+  la identidad autorizada. Reportar todas las diferencias (PD05); lector pendiente.
 - Importador repetible por comando, sin duplicados, con creados, actualizados,
   omitidos y observados; distinguir contadores de entidades y filas físicas.
 - Conservar referencia de la importación previa. Ante divergencia entre fuente
   y modificación humana posterior, mantener el valor actual y registrar
   incidencia; no sobrescribirlo silenciosamente.
+- revision_manual y snapshots preparan comparación de previo/actual/nueva fuente
+  por campo (PD06). Un futuro save(source="IMPORTACION") no aumenta la revisión
+  humana. No exponer ese origen ni N2.origen como campos editables por usuarios.
 
 El detalle comprobado y SHA-256 del original están en ANALISIS_EXCEL.md.
 
@@ -122,6 +131,10 @@ organización y catálogos; consulta solo lee datos funcionales y nunca hashes o
 secretos. Proteger operaciones en servidor; esconder botones no autoriza.
 Rechazar inactivos y credenciales de sesión reutilizadas después de logout.
 Crear cuentas demo reproducibles con credenciales configuradas localmente.
+Usuario.identificador se normaliza NFKC/strip/casefold y admite usuario o correo
+en un campo único. Puesto obligatorio, incluso superusuario; empresa derivada.
+Duración de sesión configurada: 2 h, HttpOnly/SameSite=Lax; Secure activable con
+HTTPS. Backend/configuración preparados; HTTP/roles sobre rutas aún pendientes.
 
 Convenciones de diseño para la futura implementación: Python con PEP 8,
 snake_case en funciones/variables y PascalCase en clases; nombres de módulos
@@ -143,11 +156,27 @@ credenciales de proveedores o llaves. No modificar ENUNCIADO.md ni el Excel.
 No eliminar archivos existentes ni ejecutar operaciones destructivas. En futuras
 pruebas, aislar datos y cualquier reinicio destructivo del entorno de evaluación.
 No inventar evidencias, modelos/versiones de IA, resultados ni pruebas aprobadas.
-No crear código productivo ni ejecutar P01–P12 durante esta fase documental.
+La fase actual autoriza solo base, modelos, migraciones y pruebas internas.
+No importar el Excel ni ejecutar P01–P12 ni implementar toda la interfaz.
 
-Contrato FUTURO; estos archivos/comandos todavía no existen y no deben ejecutarse
-en V1. Se actualizarán con los comandos reales tras autorizar implementación.
-WORKDIR previsto de la imagen: /app/src; Excel: /app/data/CatalogoServicios.xlsx.
+Comandos ACTUALES de modelos, documentados en README:
+
+~~~bash
+bash scripts/verify-modelos.sh
+docker compose -f compose.modelos.yaml run --rm modelos python manage.py check
+docker compose -f compose.modelos.yaml run --rm modelos python manage.py migrate --noinput
+docker compose -f compose.modelos.yaml run --rm modelos python manage.py makemigrations --check --dry-run
+docker compose -f compose.modelos.yaml run --rm modelos python manage.py test tests --keepdb --verbosity 2
+docker compose -f compose.modelos.yaml stop
+~~~
+
+Entorno aislado, sin puertos publicados; base test_ y volumen propios. Clave
+sintética pública/trust solo aquí; jamás reemplazan la configuración funcional.
+Excel/enunciado montados solo lectura para hash. No usar down -v.
+
+Contrato FUTURO del despliegue final; todavía no existen compose.yaml, init,
+import_catalog, seed_demo, verify.sh ni verify-persistence.sh.
+WORKDIR de imagen: /app/src; ruta Excel final prevista: /app/data/CatalogoServicios.xlsx.
 
 ~~~bash
 docker compose up --build -d
@@ -169,7 +198,8 @@ y un código distinto de 0 al fallar; no prueba la base de evaluación.
 
 ## Aceptación futura P01–P12
 
-Todos los escenarios están PENDIENTES: no hay implementación ni ejecución.
+Todos los escenarios están PENDIENTES de aceptación; las pruebas internas del
+modelo no los sustituyen. Resultados internos: docs/evidencias/FASE_MODELO.md.
 
 | ID | Resultado esperado |
 |---|---|
@@ -187,5 +217,5 @@ Todos los escenarios están PENDIENTES: no hay implementación ni ejecución.
 | P12 | Reiniciar contenedores sin eliminar volúmenes conserva datos previos. |
 
 Documentar comandos, fecha, commit y resultados reales; verificar interfaz con
-ambos roles. Actualizar contexto en V2/V3 con hallazgo, motivo, cambio, impacto
-y commit según CONTEXTO_V1.md. Registrar prompts usados y correcciones reales.
+ambos roles. V2 registra hallazgos; la segunda actualización V3 requiere nuevo
+motivo real, cambio, impacto y commit. Registrar prompts usados y correcciones.

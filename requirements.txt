@@ -1,0 +1,14 @@
+Django==5.2.17
+psycopg[binary]==3.3.6
+gunicorn==26.2.0
+whitenoise==6.12.0
+openpyxl==3.1.5
+argon2-cffi==25.1.0
+# Transitivas resueltas y verificadas en Python 3.13/Linux.
+argon2-cffi-bindings==26.1.0
+asgiref==3.12.1
+cffi==2.1.1
+et_xmlfile==2.0.0
+psycopg-binary==3.3.6
+pycparser==3.0
+sqlparse==0.6.0

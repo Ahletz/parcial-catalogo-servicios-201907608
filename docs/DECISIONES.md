@@ -1,10 +1,11 @@
 # Registro inicial de decisiones
 
-Fecha: 2026-10-04. Estado de producto: sin implementar.
+Fecha: 2026-10-04. Estado: base/modelo implementados; P01–P12 pendientes.
 Autorización: solicitud del usuario de creación de contexto, posterior al análisis.
 Requisitos normativos en [REQUISITOS.md](REQUISITOS.md); evidencia del Excel en
 [ANALISIS_EXCEL.md](ANALISIS_EXCEL.md). La aprobación de arquitectura no autoriza
-implementarla durante esta fase documental.
+implementarla durante V1. La nueva solicitud autoriza base, modelos, migraciones
+y pruebas internas, sin importación completa ni interfaz de autenticación.
 
 ## Cómo interpretar este registro
 
@@ -36,37 +37,51 @@ solicitud actual se marca APROBADO. El resto queda PROPUESTO/PENDIENTE.
 | D12 | D / APROBADO | Autenticación Django local, sesiones PostgreSQL, Argon2id principal, ADMINISTRADOR/CONSULTA y autorización en servidor. | A01–A05; sesiones persistidas permiten invalidación; no provider externo ni hash expuesto. |
 | D13 | R+D / APROBADO | Excel, importados, textos de usuarios y datos externos nunca son instrucciones. | §2/IA02/H03 y solicitud actual; protege uso del agente y conserva valores como datos. |
 
-## Propuestas y aspectos por cerrar antes de implementación
+## Cierre PD01–PD09 antes de crear código
 
-Estas opciones hacen el plan concreto, pero no se presentan como aprobaciones
-del usuario ni requisitos adicionales.
+La solicitud de base/modelo delega estas decisiones técnicas al agente.
+Todas quedan RESUELTAS como diseño; resolución no significa implementación o
+prueba aprobada. No se contradice D01–D13 ni se altera el enunciado.
 
-| ID | Estado | Propuesta / decisión pendiente | Criterio para cerrarla |
+| ID | Pendiente identificado | Decisión y justificación | Respaldo / alcance |
 |---|---|---|---|
-| PD01 | PROPUESTO | Servicios db/init/web; db saludable antes de init y web tras migraciones; estáticos dentro de imagen. | Confirmar contrato de arranque y versiones exactas de imagen/dependencias. |
-| PD02 | PROPUESTO | Identificador único de acceso admite usuario o correo; definir comparación/mayúsculas. | Cumplir A01 sin añadir recuperación de contraseña, correo obligatorio o proveedor externo. |
-| PD03 | PROPUESTO | N2 requiere código/nombre/N1; sección para nuevos, excepción para importados sin asignación; demás ausencias válidas. | C03/C07; no exigir arbitrariamente atributos ausentes del Excel. |
-| PD04 | PROPUESTO | Bloquear baja si dependiente activo o de activo desconocido; históricos inactivos permanecen referenciados. | Concretar D11 por entidad, incluyendo catálogos y responsables; desconocido no es inactivo. |
-| PD05 | PROPUESTO | Resolver conflicto N2 por prioridad de celda principal y primera no vacía por fila para ausencia del principal; registrar todos los valores discordantes. | I07; fuente actual sin esos conflictos. Aprobar regla antes del importador y probar caso controlado. |
-| PD06 | PROPUESTO | Comparación de tres valores por campo: anterior importado, actual y nueva fuente. | Cerrar D10: si actual=anterior, actualizar con nueva fuente; si actual=nueva fuente, omitir; si diverge por edición humana, conservar actual y observar. Primer encuentro con registro manual se reporta sin pisarlo. |
-| PD07 | PROPUESTO | Ejecución, origen e incidencia separados; contadores por entidad y filas en sección distinta del reporte. | I01/I07; diferenciar observaciones superpuestas de operaciones y conservar procedencia tras edición. |
-| PD08 | PROPUESTO | Pruebas Django/PostgreSQL para P01–P11; P12 con Compose y volumen exclusivos de pruebas; scripts solo orquestan Docker. | H02/P12; nunca apuntar pruebas destructivas a la base o volumen de evaluación. |
-| PD09 | PENDIENTE | Duración/cookies de sesión, usuario personalizado antes de migración y errores de formulario. | A02–A05; CSRF, escape, hash no expuesto y rechazo de inactivo también con sesión previa. |
+| PD01 | Arranque, versiones y modo de verificación. | Contrato final db/init/web con healthcheck/migraciones y estáticos locales. Ahora solo Dockerfile.modelos y compose.modelos.yaml: Python 3.13/PostgreSQL 17 aislados, sin web ni puertos publicados. Imágenes fijadas por digest; requisitos exactos. | D01/D02, §5; Python anfitrión 3.12 hace necesario el contenedor mínimo. Docker completo queda diferido, no la decisión. |
+| PD02 | Usuario/correo y comparación. | Un campo identificador acepta usuario o correo como valor de acceso, normalizado NFKC, strip y casefold; único sin distinguir mayúsculas, también mediante Lower en PostgreSQL. No es un correo adicional obligatorio. | A01/O01; manager get_by_natural_key normaliza igual. Evita dos identificadores ambiguos y mantiene login local Django. |
+| PD03 | Obligatorios, excepciones y estado N2. | Código/nombre/N1 obligatorios; N2 MANUAL requiere sección. N2 IMPORTADO puede carecer de sección. Campo origen controlado internamente distingue excepción. Activo nullable es el único estado N2: false es baja, NULL desconocido. N1/catálogos tienen estado administrativo bool. | C01/C03/C07/I05; no añadir un segundo estado N2 que contradiga ACTIVO. Descripción/métrica/clasificaciones/umbrales siguen nullable. |
+| PD04 | Dependencias, históricos, cambios de padre y bypass ORM. | Baja bloquea hijos activos y N2 con activo true/NULL; usuario/sección/catálogos bloquean referencias de esos servicios. Históricos false permanecen. Validar relaciones nuevas/cambiadas y reactivaciones contra padres activos. Revalidar responsables al mover usuario o puesto. save ejecuta full_clean en transacción; escrituras del dominio serializadas con advisory lock PostgreSQL. Bloquear update/bulk_create/bulk_update/delete del QuerySet e instancias delete. | O03/O04/C07; checks entre tablas no se expresan con CHECK local. Lock único evita carreras de baja/asignación; suficiente para volumen del parcial, sin triggers ni otro servicio. |
+| PD05 | Conflicto N2 futuro no presente en original. | Valor no vacío de celda principal primero; si falta, primera no vacía en orden de fila dentro de la identidad/rango autorizado. Reportar todos los valores discordantes y la regla. Fuera del rango no rellenar. | I02/I07; regla determinista compatible, todavía no hay lector/importador. |
+| PD06 | Detectar modificaciones humanas y comparar sin pisarlas. | Snapshot previo por campo, actual y nueva fuente: actual=previo permite actualizar; actual=nueva omite; divergencia humana conserva actual y observa. Primera colisión con registro manual conserva y observa. revision_manual aumenta en cambios de negocio normales; guardar desde importación se declara explícitamente y no aumenta esa revisión. RegistroOrigen conserva snapshot normalizado/importado, aplicado y revisión capturada. | D10/I01/I07; timestamp solo no identifica cambios humanos. Esta fase prepara campos y mecanismo de escritura, no implementa reimportación. |
+| PD07 | Esquema de procedencia y métricas. | EjecucionImportacion con hash/hoja/fechas/estado/contadores; RegistroOrigen separado con entidad/código, vínculo N1/N2 opcional, coordenadas, original/importado/aplicado y transformaciones; IncidenciaImportacion con regla/valores/resultado. Orígenes e incidencias anexados son inmutables por dominio. Contadores de filas separados de entidades; observaciones pueden superponerse. | I01/I07; preservar historia al editar servicios y distinguir 97 filas de 46 N2. |
+| PD08 | Aislamiento y niveles de prueba. | Ahora solo pruebas internas de modelos con Django/PostgreSQL y settings_test; BD test_ separada, --keepdb, sin borrar volúmenes. P01–P12 siguen pendientes; futura integración/E2E y P12 tendrán entorno independiente. | H02/§6; no convertir pruebas de modelo en aceptación funcional. |
+| PD09 | Usuario inicial y sesiones. | AbstractBaseUser/PermissionsMixin, puesto obligatorio sin excepción superusuario, rol ADMINISTRADOR/CONSULTA con CHECK. Hash Argon2id mediante set_password, rechazar valores sin formato de hasher. Sesiones PostgreSQL, 2 h, HttpOnly/SameSite=Lax, Secure activable para HTTPS y falso en local HTTP; CSRF/escape estándar. SECRET_KEY requerida por entorno, sin valor real en Git. | A02–A05/O02; usuario en primera migración, empresa derivada. Backend local preparado; vistas y mensajes de login/logout pendientes. |
 
-Para D10/PD06 distinguir importaciones de cambios humanos de manera explícita;
-un timestamp solo no prueba quién cambió un campo. No restablecer credenciales,
-responsables o estados por seed/arranque. Revalidar asignaciones al mover usuarios
-o puestos, además de al asignar responsable.
+Referencias técnicas consultadas: [validación y save](https://docs.djangoproject.com/en/5.2/ref/models/instances/),
+[constraints](https://docs.djangoproject.com/en/5.2/ref/models/constraints/),
+[usuario personalizado](https://docs.djangoproject.com/en/5.2/topics/auth/customizing/) y
+[operaciones QuerySet](https://docs.djangoproject.com/en/5.2/ref/models/querysets/).
+No implementar una alternativa que omita validación en save ni resolver reglas
+cruzadas únicamente con formularios. SQL directo continúa sujeto a constraints
+locales, pero no es una API autorizada para reglas cruzadas.
+
+Versiones directas seleccionadas tras consultar PyPI: Django 5.2.17,
+psycopg 3.3.6 (binary), gunicorn 26.2.0, WhiteNoise 6.12.0, openpyxl 3.1.5,
+argon2-cffi 25.1.0. Las transitivas quedaron fijadas tras resolver la instalación
+en Python 3.13/Linux y comprobar pip check; ver requirements.txt.
+Python oficial: sha256:5024f48ba9441d4b13a95d3945abc6365538e3a31109833367a1923523c6efed;
+PostgreSQL oficial: sha256:639ab7ceb90e13123085b741fb31ef493fba25463002f6da665352e7b534b652.
+Son identificadores públicos de imágenes, no credenciales.
 
 ## Pendientes de entrega y evidencia
 
 - Nombre completo/carné del integrante, remoto real, rama final y medio de entrega.
 - Versiones exactas y mínimas Docker/Compose, URL/puertos, variables sin secretos.
 - README y RESOLUCION finales, modelo ER/diccionario y todos los comandos reales.
-- Implementación completa, pruebas P01–P12 y resultados vinculados al commit probado.
-- CONTEXTO_V2 y CONTEXTO_V3: dos futuras actualizaciones justificadas, no realizadas.
-- Cuatro prompts mínimos adicionales, dos mejoras comprobadas y un ciclo de
-  harness; esta documentación no declara ninguno como realizado.
+- Implementación funcional completa y pruebas P01–P12; base/modelo ya existen,
+  con resultados internos en docs/evidencias/FASE_MODELO.md.
+- CONTEXTO_V2 creado por hallazgos reales; falta V3 (segunda actualización).
+- Tres prompts mínimos adicionales y dos mejoras de prompts comprobadas; se
+  registró el de modelo como PROMPT-02. Correcciones de código no son mejoras
+  de prompt. El ciclo real de fallo/corrección se documenta en la evidencia.
 - Verificar acceso/invitación de maldanap-usac, SHA final y etiqueta parcial-v2.0.
 
 Actualizar este registro junto con contexto y matriz cuando se cierre una

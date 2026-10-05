@@ -1,0 +1,12 @@
+FROM python:3.13-slim-bookworm@sha256:5024f48ba9441d4b13a95d3945abc6365538e3a31109833367a1923523c6efed
+
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 PYTHONPATH=/app/src:/app
+WORKDIR /app/src
+COPY requirements.txt /app/requirements.txt
+RUN python -m pip install --no-cache-dir --index-url https://pypi.org/simple -r /app/requirements.txt
+RUN useradd --uid 1000 --create-home app
+COPY src /app/src
+COPY tests /app/tests
+COPY scripts /app/scripts
+USER app
+CMD ["python", "manage.py", "check"]

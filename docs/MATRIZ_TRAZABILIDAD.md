@@ -1,12 +1,31 @@
-# Matriz inicial de trazabilidad
+# Matriz de trazabilidad — fase base/modelo
 
 Fecha: 2026-10-04. Requisitos: [REQUISITOS.md](REQUISITOS.md).
 Decisiones: [DECISIONES.md](DECISIONES.md).
 
-Las rutas de implementación, pruebas y evidencias siguientes son FUTURAS, no
-archivos existentes. Todas las implementaciones y pruebas están PENDIENTES.
-La existencia de documentación V1 o del primer prompt no acredita producto,
-P01–P12, las dos actualizaciones del contexto ni el harness.
+La tabla de cobertura actual distingue modelo de aceptación funcional. La
+matriz posterior conserva tareas/criterios FUTUROS de aceptación: P01–P12 no se
+han ejecutado ni aprobado. Un constraint o prueba de modelo no completa un P.
+
+## Cobertura actual parcial
+
+| Requisito | Implementación real | Control interno / estado |
+|---|---|---|
+| A02 | accounts/models.py y hasher en config/settings.py | Hash Argon2id y rechazo de texto plano probados; login HTTP pendiente. |
+| O02/O03 | organization/models.py, accounts/models.py y migraciones | Jerarquía, unicidad, huérfanos, padres inactivos y empresa derivada probados. P04/P05 pendientes. |
+| O04 | config/domain.py y desactivar() | Dependientes activos/desconocidos bloqueados, históricos conservados; UI pendiente. |
+| C01/C02 | catalog/models.py y migración inicial | Campos/relaciones/etiquetas únicas; preservación de Demostration probada, opciones Excel todavía no cargadas. |
+| C04/C07 | catalog/models.py, Usuario/Puesto.clean | Umbrales/responsables/movimientos probados, incluidos CHECK SQL; P09/P11 y demo pendientes. |
+| I01/I07 | imports/models.py, snapshots y revision_manual | Procedencia independiente/inmutable probada; no lector, importación ni reimportación completos. |
+| IA01/IA02 | AGENTS V2, CONTEXTO_V2 | Primera actualización por hallazgos reales; V3 pendiente. |
+| IA03/IA04 | prompts/P01_ANALISIS y P02_MODELO | Dos prompts usados registrados; tres mínimos y dos mejoras pendientes. |
+| H01/H02/H04 | scripts/verify-modelos.sh, tests/test_models.py | Rutina de esta fase y fallos/correcciones reales; harness final de aplicación pendiente. |
+| D01/D02/D03 | Dockerfile.modelos, compose.modelos.yaml, requirements | Entorno mínimo Python/PostgreSQL reproducible; despliegue final/P12 pendientes. |
+| I08/H03 | scripts/check_sources.py | Originales de solo lectura y huellas verificadas; no importación P06. |
+
+Los resultados y commit probado están en
+[FASE_MODELO.md](evidencias/FASE_MODELO.md). Enlaces al esquema y pruebas:
+[MODELO_DATOS.md](MODELO_DATOS.md), [tests](../tests/test_models.py).
 
 ## Tareas futuras
 
@@ -21,8 +40,9 @@ P01–P12, las dos actualizaciones del contexto ni el harness.
 | F6 Documentación | T19 README/RESOLUCION; T20 contexto/prompts/evidencias/matriz. |
 | F7 Entrega | T21 clon limpio/recorrido; T22 acceso GitHub/commit/etiqueta/entrega. |
 
-T01 se atiende parcialmente con V1; no constituye las dos actualizaciones
-obligatorias. T02 y T20 tienen registros iniciales, no cumplimiento final.
+T02 queda resuelto como diseño; T03/T05/T06 implementados para modelo;
+T04/T16 limitados al entorno interno. T20 tiene V1/V2 y dos prompts, no cierre
+final de IA/documentación. T07–T15 funcionales y P01–P12 siguen pendientes.
 
 ## Requisito → futura implementación → futura prueba → futura evidencia
 
@@ -56,9 +76,9 @@ documental/operativa futura. No se declara aprobado ningún control.
 | I07 | T08/T09 origen/conflictos | VC todos los importados tienen origen; conflicto controlado N2 reportado. | Registros de origen y regla aplicada. |
 | I01, I07 | T09 protección de cambios | VC edición humana posterior conservada ante fuente divergente. | Prueba de reimportación e incidencia. |
 | I08, H03 | T10/T16 integridad original | VC SHA-256 sin cambios antes/después; archivo solo lectura. | Hash comparado y configuración de acceso. |
-| IA01 | T01/T20 AGENTS/contexto | VD agente puede ubicar fuentes, alcance, reglas y comandos; selección por fase. | V1 existente; futuras verificaciones y commits. |
-| IA02 | T20 actualizaciones | VD dos cambios por hallazgo, motivos/impactos/commits y regla de confianza. | V2 y V3 futuras; V1 no cuenta como actualización. |
-| IA03 | T20 prompts | VD cinco usados con todos los campos y temas obligatorios. | Primer prompt existente; cuatro futuros. |
+| IA01 | T01/T20 AGENTS/contexto | VD agente puede ubicar fuentes, alcance, reglas y comandos; selección por fase. | V1/V2 existentes; verificación final y commits de entrega pendientes. |
+| IA02 | T20 actualizaciones | VD dos cambios por hallazgo, motivos/impactos/commits y regla de confianza. | V2 existe por hallazgos reales; V3 pendiente; V1 no cuenta como actualización. |
+| IA03 | T20 prompts | VD cinco usados con todos los campos y temas obligatorios. | Dos prompts usados registrados; tres futuros y metadatos exactos pendientes. |
 | IA04 | T20 mejoras | VD dos iteraciones con problema y resultados reales; metadatos. | Prompts revisados y resultados; pendientes. |
 | H01, H02 | T16 scripts/tests | VC rutina reproducible, datos aislados, 0/no-0 y niveles explicados. | scripts/verify.sh, resultados y documentación. |
 | H03 | T01/T16 límites | VC no lectura/publicación de secretos ni destrucción fuera de pruebas. | Instrucciones y controles sin contenido sensible. |

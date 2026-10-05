@@ -1,0 +1,45 @@
+# Entorno interno de modelos. No es el despliegue final ni carga el Excel.
+name: catalogo-modelos-201907608
+services:
+  db:
+    image: postgres:17-bookworm@sha256:639ab7ceb90e13123085b741fb31ef493fba25463002f6da665352e7b534b652
+    environment:
+      POSTGRES_DB: catalogo_modelos
+      POSTGRES_USER: modelos
+      # Solo BD de pruebas en red interna, sin puerto publicado ni secretos.
+      POSTGRES_HOST_AUTH_METHOD: trust
+    volumes:
+      - datos_modelos:/var/lib/postgresql/data
+    networks: [modelos]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U modelos -d catalogo_modelos"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+  modelos:
+    build:
+      context: .
+      dockerfile: Dockerfile.modelos
+    environment:
+      DJANGO_SECRET_KEY: clave-publica-sintetica-solo-pruebas-modelos
+      DJANGO_SETTINGS_MODULE: config.settings_test
+      DB_NAME: catalogo_modelos
+      DB_USER: modelos
+      DB_HOST: db
+      DB_PORT: "5432"
+      DB_TEST_NAME: test_catalogo_modelos
+    volumes:
+      - ./src:/app/src
+      - ./tests:/app/tests:ro
+      - ./scripts:/app/scripts:ro
+      - ./ENUNCIADO.md:/fuentes/ENUNCIADO.md:ro
+      - ./data/CatalogoServicios.xlsx:/fuentes/CatalogoServicios.xlsx:ro
+    networks: [modelos]
+    depends_on:
+      db:
+        condition: service_healthy
+networks:
+  modelos:
+    internal: true
+volumes:
+  datos_modelos:
