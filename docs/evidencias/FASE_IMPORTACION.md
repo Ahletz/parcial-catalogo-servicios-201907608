@@ -33,7 +33,8 @@ DECISIONES, MODELO_DATOS y MATRIZ; modelos/migraciones inspeccionados. Excel:
 relectura ZIP/XML solo de datos para comprobar cabeceras y filas relevantes.
 Nuevas decisiones D14–D18 concretadas antes de implementar.
 
-Los resultados finales y el commit probado se añadirán al ejecutar los controles.
+Los resultados finales contra el commit de implementación están registrados en
+la sección «Verificación final» de este documento.
 
 ## Fallos reales durante desarrollo
 
@@ -108,8 +109,9 @@ TIPO=11; actualizados=0/omitidos=0. Segunda creó/actualizó cero y omitió
 152 orígenes y ocho incidencias. Hash antes/después de Excel:
 de3b478a5faeeeaebce1aa7726e0e3321188a68e41bbb656e1d17b0c5b74dcf0.
 
-Los controles finales contra commit identificado se añadirán al terminar las
-dos rutinas completas. Ningún resultado está inferido de tener archivos.
+Las dos rutinas completas pasaron después del commit identificado; los tiempos,
+códigos y nueva demostración persistente se registran en «Verificación final».
+Ningún resultado está inferido de tener archivos.
 
 ## Arquitectura, reglas y archivos de esta fase
 
@@ -196,3 +198,140 @@ README/RESOLUCION finales y entrega/acceso GitHub siguen pendientes.
 V3 es segunda actualización real; tres temas de prompts y una revisión usados.
 Faltan autenticación/pruebas-Docker y otra mejora real; versión exacta de IA
 no expuesta y pendiente de registrar. No hubo push ni tag ni lectura de secretos.
+
+## Verificación final
+
+Terminada el 2026-10-04T21:30:06-06:00, America/Guatemala.
+Commit de código probado: 628efa5e846f01a20bf9d3775eacbe4262f862c9.
+Mensaje: feat: importar catalogo Excel con trazabilidad e idempotencia.
+Las dos rutinas se ejecutaron sobre ese commit con el árbol limpio, sin editar
+archivos mientras corrían. La imagen construida/reutilizada fue
+b3ef738bbd1e2a171c24227b81f369e60d668d56ee29d89c28c466a03382d8c0.
+
+| Control final real | Resultado | Código |
+|---|---|---|
+| bash scripts/verify-modelos.sh | 63 tests en 1.741s, OK; regresiones conservadas. | 0 |
+| bash scripts/verify-importacion.sh | Construcción, controles, 60 tests, P06/P07/P08 y dos CLI reales satisfactorios. | 0 |
+| python -m pip check, en cada rutina | No broken requirements found. | 0 |
+| python manage.py check, en cada rutina | System check identified no issues (0 silenced). | 0 |
+| python manage.py migrate --noinput, en cada rutina | No migrations to apply. | 0 |
+| python manage.py makemigrations --check --dry-run, en cada rutina | No changes detected. | 0 |
+| tests.test_import_parser y tests.test_import_persistence | Ran 60 tests in 48.377s, OK. | 0 |
+| P06, invocación individual del harness | Ran 1 test in 2.351s, OK; original 12/46, 18 opciones, cuatro incidencias y 76 orígenes. | 0 |
+| P07, invocación individual del harness | Ran 1 test in 3.794s, OK; segunda ejecución sin creados/actualizados y sin duplicados. | 0 |
+| P08, invocación individual del harness | Ran 1 test in 2.174s, OK; canónico, ambos nombres, códigos, inferencia y NULL. | 0 |
+| check_sources.py, al principio/final del harness | ENUNCIADO.md y CatalogoServicios.xlsx: integridad verificada. | 0 |
+| probe_importacion.py | Nueva BD aislada; migraciones y dos comandos import_catalog reales con códigos 0/0/0. | 0 |
+
+Son 126 métodos de prueba distintos ejecutados satisfactoriamente en los
+controles finales: 63 modelos + 38 lector/normalización + 22 persistencia +
+P06 + P07 + P08. Los controles auxiliares y las importaciones CLI no aumentan
+ese número. Ningún fallo quedó pendiente; los fallos previos se conservan arriba.
+
+Los IDs P06=66 y P07=67/68 corresponden a TestCase sobre test_catalogo_modelos;
+sus cambios se revierten. La evidencia persistente siguiente es independiente.
+
+### Primera y segunda importación CLI final, persistidas
+
+Base nueva conservada:
+test_importacion_evidencia_830e4b473a2e4d8a96ed3c2e45aea7c4.
+Migraciones: código 0. Comando en ambas ejecuciones:
+
+~~~bash
+python manage.py import_catalog --file /app/data/CatalogoServicios.xlsx
+~~~
+
+El probe define DB_NAME para esa base test_ antes de inicializar Django; nunca
+importa en catalogo_modelos ni en una base funcional/de evaluación.
+
+| Entidad | Primera: creados / actualizados / omitidos | Segunda: creados / actualizados / omitidos | Cantidad final |
+|---|---|---|---|
+| Nivel 1 | 12 / 0 / 0 | 0 / 0 / 12 | 12 |
+| Nivel 2 | 46 / 0 / 0 | 0 / 0 / 46 | 46 |
+| Clase | 2 / 0 / 0 | 0 / 0 / 2 | 2 |
+| Criticidad | 5 / 0 / 0 | 0 / 0 / 5 | 5 |
+| Tipo | 11 / 0 / 0 | 0 / 0 / 11 | 11 |
+| Total funcional | 76 / 0 / 0 | 0 / 0 / 76 | 76 |
+
+Ejecuciones 1 y 2: COMPLETADA, código de cada comando 0. Cada una reporta
+cuatro observados/cuatro incidencias: dos filas sin identidad, conflicto N1 y
+asociación N2 inferida. Observados es un contador de casos que requieren revisión;
+no constituye una partición adicional de creados/actualizados/omitidos.
+Cada ejecución analiza 97 filas: 46 servicios explícitos, 49 continuaciones,
+dos sin identidad y cero vacías. Persistido después de ambas:
+dos EjecucionImportacion COMPLETADAS, 152 RegistroOrigen y ocho IncidenciaImportacion.
+La segunda no altera entidades funcionales; añade su propia evidencia.
+
+### Hashes iniciales y finales
+
+sha256sum ENUNCIADO.md data/CatalogoServicios.xlsx .gitignore, código 0,
+después de las dos rutinas. Valores iniciales = finales:
+
+~~~text
+ENUNCIADO.md
+antes:   c99201ed3e60aadbed9c7bebbfcc970290e6d13287eec0cbac984d01a0d55cfa
+después: c99201ed3e60aadbed9c7bebbfcc970290e6d13287eec0cbac984d01a0d55cfa
+data/CatalogoServicios.xlsx
+antes:   de3b478a5faeeeaebce1aa7726e0e3321188a68e41bbb656e1d17b0c5b74dcf0
+después: de3b478a5faeeeaebce1aa7726e0e3321188a68e41bbb656e1d17b0c5b74dcf0
+.gitignore
+antes:   5d1b373b93f09538b2c0d39a905d7c472dca2db00225beec797cb1c6074530a7
+después: 5d1b373b93f09538b2c0d39a905d7c472dca2db00225beec797cb1c6074530a7
+~~~
+
+### Inventario y commits
+
+19 archivos nuevos y 10 modificados en el commit de implementación.
+Salida real de git diff --stat b08a1e5 628efa5:
+
+~~~text
+ AGENTS.md                                         |  53 +++--
+ README.md                                         |  70 +++++-
+ compose.modelos.yaml                              |   3 +-
+ docs/ANALISIS_EXCEL.md                            |  11 +-
+ docs/DECISIONES.md                                |  77 ++++++-
+ docs/MATRIZ_TRAZABILIDAD.md                       |  45 ++--
+ docs/MODELO_DATOS.md                              |   6 +-
+ docs/REQUISITOS.md                                |   6 +-
+ docs/contexto/CONTEXTO_V3.md                      |  84 +++++++
+ docs/evidencias/FASE_IMPORTACION.md               | 198 +++++++++++++++++
+ docs/prompts/P03_IMPORTACION.md                   |  84 +++++++
+ docs/prompts/P03_REVISION_INTEGRIDAD.md           |  44 ++++
+ scripts/probe_importacion.py                      | 103 +++++++++
+ scripts/verify-importacion.sh                     |  17 ++
+ scripts/verify-modelos.sh                         |   2 +-
+ src/config/domain.py                              |   9 +-
+ src/imports/management/__init__.py                |   0
+ src/imports/management/commands/__init__.py       |   0
+ src/imports/management/commands/import_catalog.py |  22 ++
+ src/imports/services/__init__.py                  |   0
+ src/imports/services/exceptions.py                |   6 +
+ src/imports/services/importer.py                  | 229 ++++++++++++++++++++
+ src/imports/services/normalizer.py                | 249 +++++++++++++++++++++
+ src/imports/services/parser.py                    | 181 ++++++++++++++++
+ src/imports/services/traceability.py              |  52 +++++
+ tests/import_helpers.py                           |  40 ++++
+ tests/test_import_acceptance.py                   | 100 +++++++++
+ tests/test_import_parser.py                       | 238 ++++++++++++++++++++
+ tests/test_import_persistence.py                  | 253 ++++++++++++++++++++++
+ 29 files changed, 2113 insertions(+), 69 deletions(-)
+~~~
+
+El commit de cierre documental solo actualiza este archivo con resultados
+observados; no altera el código probado. Su mensaje identifica el propósito:
+docs: registrar verificacion final de importacion. Se obtiene su hash sin
+atribuir a un commit su propio hash antes de existir:
+
+~~~bash
+git log -1 --format='%H %s' -- docs/evidencias/FASE_IMPORTACION.md
+git diff --stat b08a1e5 HEAD
+git status --short --branch
+git log --oneline --decorate -10
+~~~
+
+Al terminar los controles, git status indicó árbol limpio en main y
+origin/main [gone] como referencia local de seguimiento ausente; no se consultó
+el remoto. Docker compose -f compose.modelos.yaml stop terminó con código 0.
+Se conservan el contenedor detenido, volumen y bases; no se ejecutó down -v,
+DROP ni borrado de archivos. README documenta consulta ORM de la evidencia.
+Los límites y pendientes de la fase siguen siendo los indicados arriba.
