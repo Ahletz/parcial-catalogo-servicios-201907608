@@ -19,7 +19,8 @@ Decisiones de aplicación: identificador único admite usuario o correo; NFKC,
 strip y casefold en creación/login. N2 manual exige sección; importado admite
 ausencia. Activo nullable distingue desconocido, activo e inactivo. Códigos de
 unidades subordinadas únicos bajo su padre. Seis decimales son capacidad de
-almacenamiento y no una regla sobre unidades/positividad. Decisiones aprobadas,+inferencias y requisitos separados en [DECISIONES](DECISIONES.md).
+almacenamiento y no una regla sobre unidades/positividad. Decisiones aprobadas,
+inferencias y requisitos separados en [DECISIONES](DECISIONES.md).
 
 ## 2. Arquitectura y tecnologías
 
