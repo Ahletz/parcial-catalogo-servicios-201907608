@@ -1,4 +1,4 @@
-# Contexto operativo del proyecto — V2
+# Contexto operativo del proyecto — V3
 
 ## Propósito, alcance y estado
 
@@ -12,11 +12,10 @@ trazable, persistencia, Docker y evidencia de las tres ingenierías con IA.
 Fuera de alcance: tickets, facturación, consumo de servicios y funcionalidades
 adicionales no justificadas por el enunciado.
 
-Estado: base Django, 14 modelos de dominio, cuatro migraciones iniciales,
-configuración PostgreSQL/Argon2id y pruebas internas implementados. El usuario
-autorizó esta fase de base/modelo; no importador completo, interfaz ni vistas de
-login/logout. P01–P12 permanecen sin ejecutar. V2 registra una actualización
-real; V3 sigue pendiente. V1 es histórico, no una actualización.
+Estado: base Django, 14 modelos, cuatro migraciones iniciales e importador modular
+implementados. Autorización actual: importación/idempotencia/trazabilidad y P06–P08,
+que pasaron sobre el original. P01–P05/P09–P12 siguen pendientes. No login/logout
+ni interfaz completa. V2/V3 registran dos actualizaciones reales; V1 es histórico.
 
 ## Fuentes y confianza
 
@@ -42,6 +41,8 @@ Leer este archivo, [REQUISITOS.md](docs/REQUISITOS.md),
 [MATRIZ_TRAZABILIDAD.md](docs/MATRIZ_TRAZABILIDAD.md). Consultar el enunciado ante
 dudas. [CONTEXTO_V2.md](docs/contexto/CONTEXTO_V2.md) registra fuentes y hallazgos;
 [CONTEXTO_V1.md](docs/contexto/CONTEXTO_V1.md) conserva el estado histórico.
+[CONTEXTO_V3.md](docs/contexto/CONTEXTO_V3.md) es vigente: incidencias opcionales,
+baseline importado y transacciones funcionales con evidencia de fallo.
 
 Monolito modular: Python 3.13, Django 5.2 LTS, PostgreSQL 17, Gunicorn,
 WhiteNoise, openpyxl y Docker Compose. Fijar versiones exactas al implementar;
@@ -91,6 +92,8 @@ corresponda, mediante restricciones de base de datos.
 - save() ejecuta full_clean dentro de transacción con advisory lock PostgreSQL;
   update/bulk_create/bulk_update/delete se rechazan. Usar desactivar() explícito.
   No bypass mediante SQL/save_base en negocio; pruebas SQL lo hacen solo en test_.
+- Guardas genéricas respetan blank=True: una incidencia sin identidad no tiene
+  código de servicio. No inventar códigos para eludir validación (D19).
 
 ## Importación y reimportación
 
@@ -111,15 +114,20 @@ corresponda, mediante restricciones de base de datos.
   etiquetas/nombres originales.
 - Registrar hoja, filas/rangos, valores originales y transformaciones. En conflicto
   N2: valor no vacío principal primero; si ausente, primera no vacía por fila de
-  la identidad autorizada. Reportar todas las diferencias (PD05); lector pendiente.
+  la identidad autorizada. Reportar todas las diferencias (PD05); normalizer.py.
 - Importador repetible por comando, sin duplicados, con creados, actualizados,
   omitidos y observados; distinguir contadores de entidades y filas físicas.
 - Conservar referencia de la importación previa. Ante divergencia entre fuente
   y modificación humana posterior, mantener el valor actual y registrar
   incidencia; no sobrescribirlo silenciosamente.
-- revision_manual y snapshots preparan comparación de previo/actual/nueva fuente
-  por campo (PD06). Un futuro save(source="IMPORTACION") no aumenta la revisión
+- revision_manual y snapshots permiten comparación de previo/actual/nueva fuente
+  por campo (PD06/D14). Baseline: último IMPORTADO, no aplicado divergente.
+  save(source="IMPORTACION") no aumenta la revisión
   humana. No exponer ese origen ni N2.origen como campos editables por usuarios.
+- parser lee/hash de los mismos bytes, celdas/rangos exclusivamente; fórmulas en
+  regiones del contrato fallan sin evaluar. Nunca guardar el libro original.
+- Ejecución creada antes de transacción funcional; entidades, origen/incidencias
+  y cierre exitoso atómicos. Ante error, rollback y FALLIDA/incidencia posterior.
 
 El detalle comprobado y SHA-256 del original están en ANALISIS_EXCEL.md.
 
@@ -156,8 +164,8 @@ credenciales de proveedores o llaves. No modificar ENUNCIADO.md ni el Excel.
 No eliminar archivos existentes ni ejecutar operaciones destructivas. En futuras
 pruebas, aislar datos y cualquier reinicio destructivo del entorno de evaluación.
 No inventar evidencias, modelos/versiones de IA, resultados ni pruebas aprobadas.
-La fase actual autoriza solo base, modelos, migraciones y pruebas internas.
-No importar el Excel ni ejecutar P01–P12 ni implementar toda la interfaz.
+La fase actual autoriza importador y P06–P08 sobre datos aislados; no login/logout,
+autorización HTTP completa, UI ni otros escenarios de aceptación.
 
 Comandos ACTUALES de modelos, documentados en README:
 
@@ -166,16 +174,21 @@ bash scripts/verify-modelos.sh
 docker compose -f compose.modelos.yaml run --rm modelos python manage.py check
 docker compose -f compose.modelos.yaml run --rm modelos python manage.py migrate --noinput
 docker compose -f compose.modelos.yaml run --rm modelos python manage.py makemigrations --check --dry-run
-docker compose -f compose.modelos.yaml run --rm modelos python manage.py test tests --keepdb --verbosity 2
+docker compose -f compose.modelos.yaml run --rm modelos python manage.py test tests.test_models --keepdb --verbosity 2
+bash scripts/verify-importacion.sh
+docker compose -f compose.modelos.yaml run --rm modelos python manage.py import_catalog --file /app/data/CatalogoServicios.xlsx
 docker compose -f compose.modelos.yaml stop
 ~~~
 
 Entorno aislado, sin puertos publicados; base test_ y volumen propios. Clave
 sintética pública/trust solo aquí; jamás reemplazan la configuración funcional.
-Excel/enunciado montados solo lectura para hash. No usar down -v.
+Excel/enunciado montados solo lectura para hash e importación. No usar down -v.
+verify-importacion usa test_catalogo_modelos para tests y una nueva BD test_ para
+demostración CLI; ambas quedan conservadas. Nunca importa en la BD normal como
+prueba. No borrar bases anteriores al repetir el harness.
 
 Contrato FUTURO del despliegue final; todavía no existen compose.yaml, init,
-import_catalog, seed_demo, verify.sh ni verify-persistence.sh.
+seed_demo, verify.sh ni verify-persistence.sh. import_catalog ya existe.
 WORKDIR de imagen: /app/src; ruta Excel final prevista: /app/data/CatalogoServicios.xlsx.
 
 ~~~bash
@@ -196,10 +209,11 @@ Los scripts del anfitrión solo orquestarán Docker; validación y procesamiento
 se ejecutarán en contenedores. verify.sh aislará pruebas y devolverá 0 al aprobar
 y un código distinto de 0 al fallar; no prueba la base de evaluación.
 
-## Aceptación futura P01–P12
+## Estado de aceptación P01–P12
 
-Todos los escenarios están PENDIENTES de aceptación; las pruebas internas del
-modelo no los sustituyen. Resultados internos: docs/evidencias/FASE_MODELO.md.
+P06/P07/P08 están automatizadas y aprobadas. P01–P05/P09–P12 están PENDIENTES;
+pruebas internas no los sustituyen. Resultados: evidencias/FASE_MODELO.md y
+evidencias/FASE_IMPORTACION.md dentro de docs.
 
 | ID | Resultado esperado |
 |---|---|
@@ -217,5 +231,6 @@ modelo no los sustituyen. Resultados internos: docs/evidencias/FASE_MODELO.md.
 | P12 | Reiniciar contenedores sin eliminar volúmenes conserva datos previos. |
 
 Documentar comandos, fecha, commit y resultados reales; verificar interfaz con
-ambos roles. V2 registra hallazgos; la segunda actualización V3 requiere nuevo
-motivo real, cambio, impacto y commit. Registrar prompts usados y correcciones.
+ambos roles cuando exista UI. V2/V3 registran dos hallazgos y actualizaciones.
+Registrar prompts usados y correcciones: P03_REVISION_INTEGRIDAD es una revisión
+real del prompt de importación; falta otra mejora y temas autenticación/pruebas.

@@ -2,7 +2,8 @@
 
 Implementación de dominio: [config/domain.py](../src/config/domain.py).
 Estado: modelo/migraciones implementados; controles y resultados se registran
-en [FASE_MODELO.md](evidencias/FASE_MODELO.md). P01–P12 siguen pendientes.
+en [FASE_MODELO.md](evidencias/FASE_MODELO.md). P06–P08 aprobadas: ver
+[FASE_IMPORTACION.md](evidencias/FASE_IMPORTACION.md); otros nueve P pendientes.
 
 ## Relaciones
 
@@ -87,7 +88,8 @@ responsables, incluidos históricos.
 revision_manual identifica cambios de negocio mediante save() normal; una
 escritura futura de importación declarará source="IMPORTACION". El snapshot
 importado anterior permitirá comparación por campo. El modelo no ejecuta esa
-comparación ni lee el Excel todavía.
+comparación ni lee el Excel directamente; ahora lo hacen imports/services
+mediante parser/normalizer/importer/traceability. No cambiaron campos/migraciones.
 
 RegistroOrigen/IncidenciaImportacion son anexables e inmutables mediante dominio.
 Un cambio de código/nombre del servicio no reescribe el código/valores originales.

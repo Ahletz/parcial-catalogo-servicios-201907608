@@ -1,11 +1,11 @@
-# Matriz de trazabilidad — fase base/modelo
+# Matriz de trazabilidad — fase de importación
 
 Fecha: 2026-10-04. Requisitos: [REQUISITOS.md](REQUISITOS.md).
 Decisiones: [DECISIONES.md](DECISIONES.md).
 
 La tabla de cobertura actual distingue modelo de aceptación funcional. La
-matriz posterior conserva tareas/criterios FUTUROS de aceptación: P01–P12 no se
-han ejecutado ni aprobado. Un constraint o prueba de modelo no completa un P.
+matriz posterior conserva tareas/criterios FUTUROS restantes. P06–P08 ya se
+ejecutaron/aprobaron; P01–P05/P09–P12 pendientes. Un test de modelo no completa un P.
 
 ## Cobertura actual parcial
 
@@ -14,18 +14,30 @@ han ejecutado ni aprobado. Un constraint o prueba de modelo no completa un P.
 | A02 | accounts/models.py y hasher en config/settings.py | Hash Argon2id y rechazo de texto plano probados; login HTTP pendiente. |
 | O02/O03 | organization/models.py, accounts/models.py y migraciones | Jerarquía, unicidad, huérfanos, padres inactivos y empresa derivada probados. P04/P05 pendientes. |
 | O04 | config/domain.py y desactivar() | Dependientes activos/desconocidos bloqueados, históricos conservados; UI pendiente. |
-| C01/C02 | catalog/models.py y migración inicial | Campos/relaciones/etiquetas únicas; preservación de Demostration probada, opciones Excel todavía no cargadas. |
+| C01/C02 | catalog/models.py, imports/services | Campos/relaciones/etiquetas únicas; 18 opciones originales cargadas en PostgreSQL de pruebas, incluido Demostration. UI pendiente. |
 | C04/C07 | catalog/models.py, Usuario/Puesto.clean | Umbrales/responsables/movimientos probados, incluidos CHECK SQL; P09/P11 y demo pendientes. |
-| I01/I07 | imports/models.py, snapshots y revision_manual | Procedencia independiente/inmutable probada; no lector, importación ni reimportación completos. |
-| IA01/IA02 | AGENTS V2, CONTEXTO_V2 | Primera actualización por hallazgos reales; V3 pendiente. |
-| IA03/IA04 | prompts/P01_ANALISIS y P02_MODELO | Dos prompts usados registrados; tres mínimos y dos mejoras pendientes. |
-| H01/H02/H04 | scripts/verify-modelos.sh, tests/test_models.py | Rutina de esta fase y fallos/correcciones reales; harness final de aplicación pendiente. |
+| I01–I08 | imports/services y comando import_catalog | 12/46, repetición, SE.12/NULL, filas 42/67, opciones, trazabilidad y divergencias probados; P06–P08 aprobadas. |
+| IA01/IA02 | AGENTS V3, CONTEXTO_V2/V3 | Dos actualizaciones por hallazgos reales; V1 histórico. |
+| IA03/IA04 | prompts/P01_ANALISIS, P02_MODELO, P03_IMPORTACION y revisión | Tres temas usados; una revisión de importación comprobada; faltan autenticación/pruebas y otra mejora. |
+| H01/H02/H04 | verify-modelos.sh, verify-importacion.sh, probe_importacion.py | Rutinas aisladas, fallos/correcciones reales y CLI repetida; harness final HTTP/persistencia pendiente. |
 | D01/D02/D03 | Dockerfile.modelos, compose.modelos.yaml, requirements | Entorno mínimo Python/PostgreSQL reproducible; despliegue final/P12 pendientes. |
-| I08/H03 | scripts/check_sources.py | Originales de solo lectura y huellas verificadas; no importación P06. |
+| I08/H03 | scripts/check_sources.py y mounts ro | Originales solo lectura y hashes verificados antes/después; P06 aprobada. |
 
 Los resultados y commit probado están en
 [FASE_MODELO.md](evidencias/FASE_MODELO.md). Enlaces al esquema y pruebas:
 [MODELO_DATOS.md](MODELO_DATOS.md), [tests](../tests/test_models.py).
+Evidencia de importación:
+[FASE_IMPORTACION.md](evidencias/FASE_IMPORTACION.md).
+
+## Aceptación cerrada en esta fase
+
+| Requisito | Tarea/implementación real | Prueba real | Evidencia |
+|---|---|---|---|
+| I01/I02/I06/I08/C02 | T07–T10 parser/normalizer/importer/traceability, import_catalog | test_P06_importar_original: 12 N1/46 N2, opciones, incidencias y origen. | FASE_IMPORTACION, comando/fecha/commit. |
+| I01/I07 | Reconciliación PD06/D14 y ejecución nueva | test_P07_repetir_importacion: cero duplicados/cambios silenciosos, 152 orígenes. | Primera/segunda y contadores reales. |
+| I03/I04/I05/I07 | Canónico SE.12, texto exacto, inferencia y NULL | test_P08_se12_y_ausencias | Ambos nombres/coordenadas, transformación C101 y ausencias. |
+| D10/PD06 | Baseline IMPORTADO y comparación por campo | tests de segunda/tercera reimportación, fuente nueva y edición humana. | Suite de persistencia y snapshots. |
+| H02/H03 | BD test_ y demostración CLI nueva; nunca reset normal | probe_importacion.py y checks hash | Nombre de base conservada, salidas/códigos y hashes. |
 
 ## Tareas futuras
 
@@ -42,12 +54,14 @@ Los resultados y commit probado están en
 
 T02 queda resuelto como diseño; T03/T05/T06 implementados para modelo;
 T04/T16 limitados al entorno interno. T20 tiene V1/V2 y dos prompts, no cierre
-final de IA/documentación. T07–T15 funcionales y P01–P12 siguen pendientes.
+final de IA/documentación. T07–T10 implementados/probados. T11–T15 funcionales y
+P01–P05/P09–P12 pendientes; T20 ahora incluye V3, IMPORTACIÓN y una revisión.
 
 ## Requisito → futura implementación → futura prueba → futura evidencia
 
 P = prueba obligatoria; VC = control complementario propuesto; VD = verificación
-documental/operativa futura. No se declara aprobado ningún control.
+documental/operativa futura. Filas P06–P08 remiten al cierre real anterior;
+las demás conservan criterios pendientes.
 
 | Requisito | Tarea / implementación prevista | Prueba o control esperado | Evidencia futura |
 |---|---|---|---|
@@ -77,9 +91,9 @@ documental/operativa futura. No se declara aprobado ningún control.
 | I01, I07 | T09 protección de cambios | VC edición humana posterior conservada ante fuente divergente. | Prueba de reimportación e incidencia. |
 | I08, H03 | T10/T16 integridad original | VC SHA-256 sin cambios antes/después; archivo solo lectura. | Hash comparado y configuración de acceso. |
 | IA01 | T01/T20 AGENTS/contexto | VD agente puede ubicar fuentes, alcance, reglas y comandos; selección por fase. | V1/V2 existentes; verificación final y commits de entrega pendientes. |
-| IA02 | T20 actualizaciones | VD dos cambios por hallazgo, motivos/impactos/commits y regla de confianza. | V2 existe por hallazgos reales; V3 pendiente; V1 no cuenta como actualización. |
-| IA03 | T20 prompts | VD cinco usados con todos los campos y temas obligatorios. | Dos prompts usados registrados; tres futuros y metadatos exactos pendientes. |
-| IA04 | T20 mejoras | VD dos iteraciones con problema y resultados reales; metadatos. | Prompts revisados y resultados; pendientes. |
+| IA02 | T20 actualizaciones | VD dos cambios por hallazgo, motivos/impactos/commits y regla de confianza. | V2/V3 existen por hallazgos reales; V1 no cuenta como actualización. |
+| IA03 | T20 prompts | VD cinco usados con todos los campos y temas obligatorios. | Tres temas registrados; dos futuros y versión exacta pendiente. |
+| IA04 | T20 mejoras | VD dos iteraciones con problema y resultados reales; metadatos. | Una revisión P03 real/comprobada; segunda pendiente. |
 | H01, H02 | T16 scripts/tests | VC rutina reproducible, datos aislados, 0/no-0 y niveles explicados. | scripts/verify.sh, resultados y documentación. |
 | H03 | T01/T16 límites | VC no lectura/publicación de secretos ni destrucción fuera de pruebas. | Instrucciones y controles sin contenido sensible. |
 | H04 | T18 ciclo IA | VC fallo observado → corrección → nueva ejecución satisfactoria. | Extractos, diff, comandos/commit; declarar ejercicio si deliberado. |
@@ -98,5 +112,6 @@ documental/operativa futura. No se declara aprobado ningún control.
 
 Sustituir rutas previstas por enlaces a implementación y evidencia reales cuando
 existan. Registrar estado por requisito/prueba, comando, fecha y commit probado.
-Separar control documental de prueba funcional: tener un plan no aprueba P01–P12.
+Separar control documental de prueba funcional: solo P06–P08 tienen aprobación;
+tener un plan no aprueba los otros nueve.
 No copiar credenciales, hashes de contraseña ni conversaciones completas.

@@ -1,11 +1,12 @@
 # Registro inicial de decisiones
 
-Fecha: 2026-10-04. Estado: base/modelo implementados; P01–P12 pendientes.
+Fecha: 2026-10-04. Estado: modelo/importación implementados; P06–P08 aprobadas.
 Autorización: solicitud del usuario de creación de contexto, posterior al análisis.
 Requisitos normativos en [REQUISITOS.md](REQUISITOS.md); evidencia del Excel en
 [ANALISIS_EXCEL.md](ANALISIS_EXCEL.md). La aprobación de arquitectura no autoriza
-implementarla durante V1. La nueva solicitud autoriza base, modelos, migraciones
-y pruebas internas, sin importación completa ni interfaz de autenticación.
+implementarla durante V1. La fase posterior autorizó base/modelos/migraciones;
+la solicitud actual autoriza importador completo y P06–P08. No login/logout/UI
+completa ni push/tag. Los otros nueve escenarios siguen pendientes.
 
 ## Cómo interpretar este registro
 
@@ -71,17 +72,73 @@ Python oficial: sha256:5024f48ba9441d4b13a95d3945abc6365538e3a31109833367a192352
 PostgreSQL oficial: sha256:639ab7ceb90e13123085b741fb31ef493fba25463002f6da665352e7b534b652.
 Son identificadores públicos de imágenes, no credenciales.
 
+## Concreción de importación — antes de implementar
+
+Solicitud actual: implementar importador y automatizar P06–P08; no autoriza
+login/logout, interfaz completa, push ni tag. Base observada: b08a1e5, main,
+árbol limpio; origin apunta al repositorio GitHub Ahletz del proyecto.
+
+Hallazgo → motivo → decisión → impacto, sin cambiar D01–D13 ni PD01–PD09:
+
+- D14: RegistroOrigen distingue valores_importados y valores_aplicados. Si una
+  divergencia conservada se toma después como nuevo baseline aplicado, una
+  tercera importación podría sobrescribir el valor humano. Concretar PD06:
+  comparar por campo con el último snapshot IMPORTADO de una ejecución
+  COMPLETADA, nunca con el valor aplicado divergente. Actual=nuevo omite;
+  actual=importado previo permite actualizar; divergencia conserva y observa.
+  Primera colisión sin procedencia conserva diferencias. Comparar Decimal por
+  valor canónico, manteniendo valor/tipo originales en evidencia. Las
+  asignaciones organizacionales y estados N1/catálogos no pertenecen al Excel.
+- D15: una ejecución creada dentro de la misma transacción que falla también
+  desaparece por rollback. Crear ejecución antes de procesar; importar entidades,
+  procedencia, incidencias y cierre exitoso en una transacción con el lock ya
+  aprobado. Ante fallo, rollback funcional y registrar FALLIDA/incidencia después.
+  Archivo inexistente no permite calcular hash ni crear ejecución válida.
+- D16: leer bytes una sola vez, calcular hash y abrir esos mismos bytes con
+  openpyxl (data_only=False, keep_links=False). No guardar libro ni evaluar
+  fórmulas; fórmulas en las regiones del contrato producen error fatal explícito,
+  no se sustituyen por valores cacheados. Textos se conservan exactamente.
+- D17: códigos/etiquetas identifican origen; snapshots guardan ID aplicado para
+  enlazarlo también si una edición humana cambia el código o etiqueta. El código
+  del nuevo RegistroOrigen coincide con el servicio actual; el código de la
+  fuente se conserva en valores_importados/originales. Sin inferencias de
+  renombre de la fuente; colisiones de dos identidades hacia una entidad fallan.
+- D18: creados/actualizados/omitidos cuentan entidades funcionales, separados por
+  NIVEL1/NIVEL2/CLASE/CRITICIDAD/TIPO. Observados cuentan unidades con incidencia
+  y pueden superponerse; incidencias cuentan eventos. Filas físicas,
+  continuaciones y huérfanas se cuentan aparte. 12/46 son cardinalidades del
+  conjunto original, no límites a registros manuales adicionales en PostgreSQL.
+
+Impacto: servicios de parser/normalización/importación/trazabilidad y tests;
+no hace falta cambiar modelos ni generar migraciones. CONTEXTO_V3 registrará
+estos hallazgos reales. P06–P08 solo se cerrarán tras ejecutar pruebas reales.
+Referencias: documentación oficial de
+[openpyxl](https://openpyxl.readthedocs.io/en/stable/api/openpyxl.reader.excel.html)
+y [transacciones Django](https://docs.djangoproject.com/en/5.2/topics/db/transactions/).
+
 ## Pendientes de entrega y evidencia
 
-- Nombre completo/carné del integrante, remoto real, rama final y medio de entrega.
+### Hallazgo real de pruebas: obligatoriedad heredada (resuelto)
+
+La suite de importación falló por IncidenciaImportacion.codigo opcional según
+blank=True, pero obligatorio según DomainValidationMixin.clean. Nueva D19:
+la guarda común respeta ausencia cuando el campo tiene blank=True; mantiene
+validación de texto obligatorio en códigos/nombres/etiquetas restantes.
+Motivo: registrar filas sin identidad y errores sin inventar códigos.
+Impacto: ajuste mínimo de config/domain.py, ninguna migración. La suite fallida
+pasó con 60 tests, las 63 regresiones del modelo pasaron y P06–P08 pasaron.
+Documentado como hallazgo V3 y revisión real del prompt de trabajo.
+
+- Nombre completo/carné del integrante, rama final y medio de entrega. Remoto
+  observado: origin / GitHub Ahletz; no se verificó acceso del catedrático.
 - Versiones exactas y mínimas Docker/Compose, URL/puertos, variables sin secretos.
 - README y RESOLUCION finales, modelo ER/diccionario y todos los comandos reales.
-- Implementación funcional completa y pruebas P01–P12; base/modelo ya existen,
-  con resultados internos en docs/evidencias/FASE_MODELO.md.
-- CONTEXTO_V2 creado por hallazgos reales; falta V3 (segunda actualización).
-- Tres prompts mínimos adicionales y dos mejoras de prompts comprobadas; se
-  registró el de modelo como PROMPT-02. Correcciones de código no son mejoras
-  de prompt. El ciclo real de fallo/corrección se documenta en la evidencia.
+- Implementación funcional HTTP/UI y P01–P05/P09–P12; importación ya aprobada
+  en P06–P08, con resultados en docs/evidencias/FASE_IMPORTACION.md.
+- V2/V3 creados por hallazgos reales; revisar contexto vigente en fases futuras.
+- Dos temas de prompts adicionales y otra mejora real; IMPORTACIÓN y su
+  revisión de integridad están registradas. Correcciones de código sin revisar
+  instrucciones no cuentan como mejoras. Metadatos exactos de modelo pendientes.
 - Verificar acceso/invitación de maldanap-usac, SHA final y etiqueta parcial-v2.0.
 
 Actualizar este registro junto con contexto y matriz cuando se cierre una

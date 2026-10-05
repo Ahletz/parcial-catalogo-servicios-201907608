@@ -9,4 +9,4 @@ docker compose -f compose.modelos.yaml run --rm modelos python -m pip check
 docker compose -f compose.modelos.yaml run --rm modelos python manage.py check
 docker compose -f compose.modelos.yaml run --rm modelos python manage.py migrate --noinput
 docker compose -f compose.modelos.yaml run --rm modelos python manage.py makemigrations --check --dry-run
-docker compose -f compose.modelos.yaml run --rm modelos python manage.py test tests --keepdb --verbosity 2
+docker compose -f compose.modelos.yaml run --rm modelos python manage.py test tests.test_models --keepdb --verbosity 2

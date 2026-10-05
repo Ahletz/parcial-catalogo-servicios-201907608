@@ -2,7 +2,7 @@
 
 Fuente normativa: [ENUNCIADO.md](../ENUNCIADO.md), secciones 1–10.
 Fecha de registro: 2026-10-04, America/Guatemala.
-Estado: implementación parcial del modelo; aceptación P01–P12 pendiente.
+Estado: modelo/importación implementados; P06–P08 aprobadas; otros nueve pendientes.
 Los IDs son etiquetas de trazabilidad, no requisitos adicionales.
 Decisiones aprobadas e inferencias: [DECISIONES.md](DECISIONES.md).
 
@@ -77,9 +77,9 @@ Organización y responsables son requisitos nuevos; no existen como datos del Ex
 | GEN01 | Trabajo individual, comprender código y justificar decisiones tomadas con IA. | §1, §8.10 |
 
 P01–P12 y sus resultados esperados están en
-[AGENTS.md](../AGENTS.md#aceptación-futura-p01p12); su implementación, prueba y
+[AGENTS.md](../AGENTS.md#estado-de-aceptación-p01p12); su implementación, prueba y
 evidencia futuras se relacionan en [MATRIZ_TRAZABILIDAD.md](MATRIZ_TRAZABILIDAD.md).
-Ningún escenario está ejecutado ni aprobado.
+Solo P06/P07/P08 se ejecutaron y aprobaron; evidencia en FASE_IMPORTACION.
 
 ## GitHub y documentación
 

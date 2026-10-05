@@ -108,8 +108,13 @@ class DomainValidationMixin:
             self.validate_active_reference(self.parent_field)
         self.validate_deactivation()
         for name in ("codigo", "nombre", "etiqueta"):
-            value = getattr(self, name, None)
-            if hasattr(self, name) and (not isinstance(value, str) or not value.strip()):
+            if not hasattr(self, name):
+                continue
+            value = getattr(self, name)
+            field = self._meta.get_field(name)
+            if field.blank and value in (None, ""):
+                continue
+            if not isinstance(value, str) or not value.strip():
                 raise ValidationError({name: "Este valor es obligatorio."})
 
     def save(self, *args, source="MANUAL", **kwargs):

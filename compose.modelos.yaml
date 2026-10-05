@@ -1,4 +1,4 @@
-# Entorno interno de modelos. No es el despliegue final ni carga el Excel.
+# Entorno interno de modelos/importación. No es el despliegue final.
 name: catalogo-modelos-201907608
 services:
   db:
@@ -34,6 +34,7 @@ services:
       - ./scripts:/app/scripts:ro
       - ./ENUNCIADO.md:/fuentes/ENUNCIADO.md:ro
       - ./data/CatalogoServicios.xlsx:/fuentes/CatalogoServicios.xlsx:ro
+      - ./data/CatalogoServicios.xlsx:/app/data/CatalogoServicios.xlsx:ro
     networks: [modelos]
     depends_on:
       db:
