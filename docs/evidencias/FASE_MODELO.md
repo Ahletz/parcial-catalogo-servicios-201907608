@@ -2,7 +2,9 @@
 
 Fecha: 2026-10-04, America/Guatemala. Base: f5f39e3.
 Este registro documenta comandos reales de esta fase; P01–P12 no se ejecutaron.
-La ejecución final contra commit identificado se añadirá tras versionar código.
+Código verificado: d513d949d9ed94c7d7b8e7b4b8ca0ee34ca9fd9e.
+Este registro final se añade en un commit documental posterior; el código,
+migraciones, dependencias y pruebas permanecen iguales al commit verificado.
 
 ## Controles ejecutados durante el desarrollo
 
@@ -36,7 +38,7 @@ documentos Markdown se comprobaron sin enlaces rotos (código 0). Se compararon
 hashes de originales al iniciar y dentro de la rutina. Las cuatro regresiones
 adicionales comprueban normalización directa de identificador, procedencia
 histórica después de cambiar el código de un servicio y los CHECK locales de
-sección manual/origen válido. La ejecución contra commit se añadirá al completar.
+sección manual/origen válido. El resultado contra commit está registrado abajo.
 
 ## Cobertura de los trece controles mínimos solicitados
 
@@ -102,3 +104,115 @@ controlados comprueba CHECK/UNIQUE/FK; no es un acceso permitido en negocio.
 Las FK diferidas se fuerzan a comprobar dentro de la transacción de prueba.
 No se registran contraseñas ni hashes de usuarios. Excel/enunciado se comparan
 por SHA-256 y permanecen solo lectura; no se ejecuta importación.
+
+## Verificación del commit de implementación
+
+Commit: d513d949d9ed94c7d7b8e7b4b8ca0ee34ca9fd9e, mensaje
+feat: crear base Django y modelos persistentes. git status --porcelain estaba
+vacío antes de ejecutar y después de terminar la rutina. Cierre de verificación
+y apagado registrado a las 2026-10-04T20:12:39-06:00, America/Guatemala.
+
+Comando ejecutado: bash scripts/verify-modelos.sh. Resultado global: código 0.
+Cada paso es secuencial, con set -euo pipefail; cualquier error detiene la rutina.
+
+| Comando real dentro del script (prefijo docker compose -f compose.modelos.yaml) | Resultado / código |
+|---|---|
+| build modelos | Imagen reconstruida con las fuentes del commit / 0. |
+| up -d db | PostgreSQL propio disponible, healthy como dependencia / 0. |
+| run --rm modelos python /app/scripts/check_sources.py | Enunciado y Excel: integridad verificada / 0. |
+| run --rm modelos python -m pip check | No broken requirements found / 0. |
+| run --rm modelos python manage.py check | System check identified no issues (0 silenced) / 0. |
+| run --rm modelos python manage.py migrate --noinput | No migrations to apply; las cuatro iniciales ya estaban aplicadas / 0. |
+| run --rm modelos python manage.py makemigrations --check --dry-run | No changes detected / 0. |
+| run --rm modelos python manage.py test tests --keepdb --verbosity 2 | Found 63 test(s); Ran 63 tests in 1.820s; OK / 0. |
+
+Extracto real de salida final:
+
+~~~text
+Ran 63 tests in 1.820s
+
+OK
+Preserving test database for alias 'default' ('test_catalogo_modelos')...
+~~~
+
+Controles adicionales ejecutados antes de versionar: AST de 30 archivos Python
+válido, 63 métodos test_ encontrados, enlaces locales Markdown válidos y
+SHA-256 de enunciado/Excel/.gitignore idénticos a los iniciales (código 0).
+git diff --cached --check pasó (0) para todos los archivos nuevos/modificados.
+Estos controles estáticos no se presentan como pruebas funcionales.
+
+Después: docker compose -f compose.modelos.yaml stop terminó en código 0;
+catalogo-modelos-201907608-db-1 quedó Stopped. No se eliminó volumen ni base.
+No hubo push, etiqueta final de entrega ni modificación de remoto.
+
+## Archivos y estructura versionados
+
+Modificados: AGENTS.md, docs/DECISIONES.md, docs/MATRIZ_TRAZABILIDAD.md y
+docs/REQUISITOS.md. Todos los demás de la siguiente salida son nuevos.
+No se modificaron ENUNCIADO.md, data/CatalogoServicios.xlsx ni .gitignore.
+V1 y PROMPT-01 conservan sus versiones históricas.
+
+Salida real de git diff --stat f5f39e3 d513d94:
+
+~~~text
+ .dockerignore                               |  20 ++
+ .env.example                                |  10 +
+ AGENTS.md                                   |  78 +++--
+ Dockerfile.modelos                          |  12 +
+ README.md                                   |  67 ++++
+ compose.modelos.yaml                        |  45 +++
+ docs/DECISIONES.md                          |  61 ++--
+ docs/MATRIZ_TRAZABILIDAD.md                 |  40 ++-
+ docs/MODELO_DATOS.md                        |  94 ++++++
+ docs/REQUISITOS.md                          |   2 +-
+ docs/contexto/CONTEXTO_V2.md                |  76 +++++
+ docs/evidencias/FASE_MODELO.md              | 104 ++++++
+ docs/prompts/P02_MODELO.md                  |  72 +++++
+ requirements.txt                            |  14 +
+ scripts/check_sources.py                    |  14 +
+ scripts/verify-modelos.sh                   |  12 +
+ src/accounts/__init__.py                    |   0
+ src/accounts/apps.py                        |   6 +
+ src/accounts/migrations/0001_initial.py     |  46 +++
+ src/accounts/migrations/__init__.py         |   0
+ src/accounts/models.py                      | 132 ++++++++
+ src/catalog/__init__.py                     |   0
+ src/catalog/apps.py                         |   6 +
+ src/catalog/migrations/0001_initial.py      | 112 +++++++
+ src/catalog/migrations/__init__.py          |   0
+ src/catalog/models.py                       | 133 ++++++++
+ src/config/__init__.py                      |   0
+ src/config/domain.py                        | 197 ++++++++++++
+ src/config/settings.py                      |  99 ++++++
+ src/config/settings_test.py                 |  12 +
+ src/config/urls.py                          |   2 +
+ src/config/wsgi.py                          |   6 +
+ src/imports/__init__.py                     |   0
+ src/imports/apps.py                         |   6 +
+ src/imports/migrations/0001_initial.py      | 115 +++++++
+ src/imports/migrations/__init__.py          |   0
+ src/imports/models.py                       | 173 ++++++++++
+ src/manage.py                               |  10 +
+ src/organization/__init__.py                |   0
+ src/organization/apps.py                    |   6 +
+ src/organization/migrations/0001_initial.py | 125 ++++++++
+ src/organization/migrations/__init__.py     |   0
+ src/organization/models.py                  |  72 +++++
+ tests/__init__.py                           |   0
+ tests/test_models.py                        | 474 ++++++++++++++++++++++++++++
+ 45 files changed, 2395 insertions(+), 58 deletions(-)
+~~~
+
+El commit documental posterior solo agrega este registro final. Su identidad
+se obtiene con git log -1 --format='%H %s' -- docs/evidencias/FASE_MODELO.md.
+Para el acumulado final: git diff --stat f5f39e3 HEAD.
+
+## Pendientes de la siguiente fase
+
+Implementar lector/importador y comparación de reimportación, autenticación y
+roles HTTP, interfaz de mantenimientos/consulta, demo, Docker final y P01–P12.
+Completar segunda actualización de contexto por otro hallazgo real, tres
+prompts mínimos adicionales, dos mejoras de prompt, metadatos exactos de IA,
+README/RESOLUCION finales y verificación de entrega/acceso GitHub.
+El esquema y sus límites están en MODELO_DATOS; la cobertura parcial y tareas
+futuras están en MATRIZ_TRAZABILIDAD. No se declara terminado el proyecto total.
