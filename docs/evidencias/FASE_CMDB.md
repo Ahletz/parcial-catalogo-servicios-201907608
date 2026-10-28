@@ -84,3 +84,9 @@ git log -1 --diff-filter=A --format='%H %s' -- src/cmdb/models.py
 El resumen entregable registra hashes efectivamente creados; no inventar SHA
 autorreferentes. No push/tag. La taxonomía adicional sigue sin fuente y la
 aceptación exhaustiva de jerarquía no se declara cerrada.
+
+## Controles finales observados
+
+AST de los seis archivos Python CMDB correcto; migración con seis CreateModel y sin RunPython. Enlaces locales de documentos afectados correctos; hashes de CMDB.xlsx, CatalogoServicios.xlsx, Leccion_22.pdf y Tarea_Service_Desk.pdf intactos. git diff --check: código 0. Diff sin cambios en accounts/organization/catalog/imports/config.domain, tests, scripts, requirements o Docker/Compose. La única integración es añadir cmdb a INSTALLED_APPS. No son pruebas de ejecución de reglas.
+
+Primer commit real en la copia: 2fb2521c8b1fb9aaeed29da99cb7e6a0c436f46a (documentación). Segundo commit identificable por git log de src/cmdb/models.py; el resumen de entrega registra su SHA real tras crearlo. No se afirma aceptación completa de esta fase en el repositorio original.

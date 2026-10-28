@@ -1,10 +1,11 @@
 # Resolución del parcial — catálogo de servicios
 
 > Nota de alcance (2026-10-29): este documento describe la implementación PP2 y
-> sus resultados históricos. Service Desk está en fase documental V4; diseño
+> sus resultados históricos. V4 documentó SD; V5 prepara el modelo CMDB
+> en una copia aislada, sin pruebas funcionales ni migración aplicada; diseño
 > y brechas en [SERVICE_DESK](SERVICE_DESK.md), [MODELO](MODELO.md),
 > [PROCESOS](PROCESOS.md), [IA](IA.md) y [PRUEBAS](PRUEBAS.md). No se ejecutaron
-> pruebas ni se implementaron nuevas funciones en esta actualización.
+> pruebas funcionales en V5; solo controles ligeros (ver FASE_CMDB).
 
 Software Avanzado, entrega individual, carné 201907608. Autor local Git: Aheltz;
 nombre completo PENDIENTE DE CONFIRMAR. Repositorio Ahletz/

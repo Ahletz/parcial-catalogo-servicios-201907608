@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     "accounts",
     "catalog",
     "imports",
+    "cmdb",
 ]
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",

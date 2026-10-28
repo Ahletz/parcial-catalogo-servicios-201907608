@@ -1,6 +1,6 @@
 # Ingeniería asistida por IA: contexto, plan y evidencia real
 
-Fecha: 2026-10-29. **Fase actual: análisis y documentación.** Fuentes T §§1/9/14,
+Fecha: 2026-10-29. **V4 documental; V5 añade modelo CMDB y controles ligeros.** Fuentes T §§1/9/14,
 detalladas en [FUENTES_SERVICE_DESK](FUENTES_SERVICE_DESK.md). No se han ejecutado
 flujos Service Desk ni se han demostrado nuevos ciclos funcionales.
 
@@ -14,7 +14,7 @@ flujos Service Desk ni se han demostrado nuevos ciclos funcionales.
 | Loop | ≥3 ciclos objetivo→propuesta/cambio→ejecución→evaluación→corrección→nueva verificación; al menos defecto funcional y datos/permisos | Pendientes en SD. Ciclos PP2 conservados con su alcance histórico; no presentar un plan o revisión textual como ciclo funcional ejecutado. |
 | Graph | Aplicar Graph Engineering y explicar ambos grafos en defensa | Requisito explícito de §1/14, aunque §9 se titula cuatro ingenierías. Diseño G1/G2 en MODELO; segundo grafo esperado por confirmar. Sin ejecución ni métricas de grafo. |
 
-## Prompt real utilizado en esta fase: SD-PE01
+## Prompt real de la fase V4: SD-PE01
 
 **Objetivo:** analizar la ampliación Service Desk y actualizar el contexto sin
 implementar funciones. Herramienta observada: Codex desktop. Fecha: 2026-10-29,

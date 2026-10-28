@@ -1,8 +1,9 @@
 # Modelo persistente inicial
 
 > Alcance PP2. El modelo de ampliación SD es una propuesta en
-> [MODELO](MODELO.md); no existen todavía sus tablas ni migraciones. La
-> clasificación CMDB debe resolverse con fuentes antes de programar (SD-DP01).
+> [MODELO](MODELO.md); V5 prepara seis modelos CMDB y una migración, sin
+> aplicación PostgreSQL verificada. [ANALISIS_CMDB](ANALISIS_CMDB.md) cierra
+> el modelo mínimo sin inventar la taxonomía adicional aún sin fuente.
 
 Implementación de dominio: [config/domain.py](../src/config/domain.py).
 Estado: modelo/migraciones implementados; controles y resultados se registran

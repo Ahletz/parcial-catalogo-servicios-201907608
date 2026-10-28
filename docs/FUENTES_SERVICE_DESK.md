@@ -1,7 +1,7 @@
 # Fuentes de Service Desk y límites de interpretación
 
 Fecha de inspección: 2026-10-29, America/Guatemala. Base: `9624e34`.
-Estado: lectura y documentación; ninguna función nueva implementada.
+Estado inicial V4: lectura y documentación. Actualización de modelo CMDB V5 en ANALISIS_CMDB y FASE_CMDB, sin carga de datos.
 
 ## Inventario y procedencia
 

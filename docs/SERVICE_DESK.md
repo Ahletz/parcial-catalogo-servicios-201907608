@@ -1,7 +1,7 @@
 # Service Desk: requisitos, brechas y arquitectura prevista
 
 Fecha: 2026-10-29. Base inspeccionada: `9624e34` en `main`.
-**Diseño documental, no implementación.** Fuentes y ambigüedades en
+**Análisis inicial V4; avance parcial de modelo CMDB en V5 al final.** Fuentes y ambigüedades en
 [FUENTES_SERVICE_DESK](FUENTES_SERVICE_DESK.md). T = nuevo enunciado; L22/L25 =
 diapositivas. Secciones y páginas identifican la fuente de cada requisito.
 
