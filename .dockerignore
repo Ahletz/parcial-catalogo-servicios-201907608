@@ -19,3 +19,6 @@ temp
 *.p12
 secrets
 data/201907608_P2_SA.pdf
+
+# Adjuntos privados de Service Desk (datos de ejecución).
+privado/

@@ -1,27 +1,30 @@
-# Contexto operativo — V5: modelo persistente CMDB
+# Contexto operativo — V6: CMDB integrada y núcleo Service Desk
 
 Fecha: 2026-10-29, America/Guatemala. Contexto vigente:
-[CONTEXTO_V5](docs/contexto/CONTEXTO_V5.md); V4 es antecedente. Base 396aa81.
+[CONTEXTO_V6](docs/contexto/CONTEXTO_V6.md); V4/V5 son antecedentes.
+CMDB integrada en `main` por fast-forward (2fb2521, 35403e6).
 
 ## Mandato y estado actual
 
-La solicitud actual autoriza análisis real de CMDB/L22 y **solo el modelo CMDB**:
-clasificación, ubicación, CI, relaciones CI–CI/CI–ServicioNivel2, migración y
-registro de app; documentación y hasta dos commits locales. Reutilizar Usuario
-y DomainModel. No crear tickets/workflows, dashboard, generador de 5,000,
-importador CMDB, UI ni recorridos completos de grafos. No ejecutar P01–P18 ni
-suite completa; únicamente check y comprobación/creación de migraciones, con
-aplicación de esquema en desarrollo aislado si es viable. Sin push/tag.
+La solicitud SD-PE03 autorizó integrar CMDB e implementar el núcleo Service
+Desk (tickets, colas, permisos, asignación concurrente, siete procesos), con
+validación limitada a `check`, `makemigrations --check --dry-run` y migraciones,
+y hasta dos commits locales. Sin push/tag, sin suite completa ni SD-P01–P18.
 
-La base PP2 se conserva. El modelo CMDB es parcial respecto a toda la tarea SD;
-no implica que funcionen tickets, portales, indicadores o generación. El entorno
-actual bloqueó Docker y escritura del original: los cambios se preparan en una
-copia permitida, sin afirmar aplicación al original ni migración PostgreSQL
-ejecutada. Detalles/reproducción en [FASE_CMDB](docs/evidencias/FASE_CMDB.md).
+Implementado sin verificación funcional: `src/service_desk` (Ticket, colas,
+membresías, roles SD, bitácora, comentarios, adjuntos, transferencias, avisos,
+servicios y vista de descarga) y `src/processes` (vocabulario, motor, siete
+definiciones, aprobaciones y detalles). No existen todavía portal, consola,
+FAQ, tablero, indicadores, demo SD, generador de 5,000 CI ni volumen Docker
+de adjuntos. Una fase nueva debe confirmar su propia autorización.
+
+Las migraciones nuevas se aplicaron solo en PostgreSQL efímero. No afirmar que
+pasan pruebas PP2/SD hasta ejecutarlas; `Usuario.rol` cambió y requiere
+regresión. Evidencia: [FASE_SERVICE_DESK](docs/evidencias/FASE_SERVICE_DESK.md).
 
 ## Orden de lectura y selección del contexto
 
-1. Este archivo, [V4](docs/contexto/CONTEXTO_V4.md), [V5](docs/contexto/CONTEXTO_V5.md) y [ANALISIS_CMDB](docs/ANALISIS_CMDB.md).
+1. Este archivo, [V6](docs/contexto/CONTEXTO_V6.md), [V5](docs/contexto/CONTEXTO_V5.md) y [ANALISIS_CMDB](docs/ANALISIS_CMDB.md).
 2. [README](README.md), [RESOLUCION](docs/RESOLUCION.md),
    [DECISIONES](docs/DECISIONES.md), [MODELO_DATOS](docs/MODELO_DATOS.md),
    [REQUISITOS PP2](docs/REQUISITOS.md) y
@@ -59,9 +62,16 @@ No borrar ni renombrar los duplicados aportados por el usuario.
   sin claves de IA ni suscripción. Versiones fijadas en archivos existentes.
 - Empresa→Área→Departamento→Sección→Puesto→Usuario; padre único, códigos bajo
   padre, empresa del usuario derivada, bajas lógicas y referencias protegidas.
-- CONSULTA solo lectura. Su pertenencia a cola no puede habilitar escritura.
-  Hoy Usuario.rol solo tiene dos valores; roles múltiples/capacidades SD son
-  diseño pendiente, no basta ampliar menús ni reutilizar la guarda admin sola.
+- CONSULTA solo lectura. Su pertenencia a cola o rol SD no habilita escritura:
+  `permisos.capacidades` la recorta a CONSULTAR y no ve notas/adjuntos internos.
+  `Usuario.rol` ∈ ADMINISTRADOR/CONSULTA/OPERATIVO; solicitante, agente y
+  aprobador son `AsignacionRolSD`; capacidades por `MembresiaCola`.
+- Toda modificación de tickets pasa por `service_desk.servicios`: primero
+  `domain_transaction` (lock advisory), después `select_for_update`. No invertir
+  el orden ni editar tickets con save directo desde vistas.
+- Aprobador ≠ solicitante/creador (y ≠ beneficiario en accesos). Ejecutar
+  cambios, implementar servicios o provisionar accesos exige aprobación cuya
+  huella coincide con el contenido actual.
 - Catálogo original: 12 N1 y 46 N2, etiquetas/códigos exactos, NULL distinto de
   cero/inactivo, umbrales ordenados, sección/responsable coherentes.
 - Combinadas solo dentro de rango; filas 42/67 observadas sin identidad;
@@ -76,26 +86,24 @@ No borrar ni renombrar los duplicados aportados por el usuario.
   Cambios pequeños, diff revisado, no reescribir historia ni añadir archivos
   ajenos a la tarea. Respetar modificaciones previas del usuario.
 
-## Contrato restante de Service Desk (fuera de esta fase)
+## Contrato restante de Service Desk
 
-Siete procesos de T §6, ≥7 colas, ≥35 tickets (5/proceso), roles admin,
-solicitante, agente, aprobador y consulta; seis tipos L25 con mapeo explícito.
-Tickets trazables, CI opcionales justificados, notas internas/adjuntos privados,
-permisos de cola, reclamo concurrente único, aprobaciones, cierre/reapertura.
-CMDB y ≥5,000 dispositivos sintéticos persistidos, semilla/idempotencia,
-clasificación de origen, relaciones y recorrido de servicios potencialmente
-afectados. FAQ/portal/consola/tablero e indicadores con reglas temporales.
+Pendiente: portal solicitante, consola de agente, FAQ/nivel 0, búsqueda y
+paginación de tickets, tablero e indicadores, demo con ≥7 colas, roles admin/
+solicitante/agente/aprobador/consulta y ≥35 tickets (5/proceso) con E0–E3 e
+I0–I6; generador ≥5,000 dispositivos, importador CMDB y recorridos de grafo;
+volumen privado de adjuntos en Compose; harness y SD-P01–P18.
 
 **Límite de fidelidad:** fuentes no enumeran taxonomía adicional de dispositivos;
 el modelo mínimo se decide en ANALISIS_CMDB, sin usar organigrama ni SKMS/CMS
 como categorías. G1 clasificación/G2 técnico adoptados para proyecto, pendientes
-de confirmación docente. SD-DP01/02/08/09 tienen estado actualizado en V5; resto
-de pendientes se mantiene. Ninguna decisión se atribuye como dato de diapositiva.
+de confirmación docente. Las bandas I0–I6 y la equivalencia de soporte son
+decisiones D54/D55, no datos de diapositiva.
 
 T exige ≥8 prompts usados/2 mejoras, ≥3 actualizaciones justificadas y ≥3 ciclos
-reales (uno funcional y otro datos/permisos), más Graph Engineering. No fabricar
-prompts/errores/mediciones, crear versiones de relleno ni contar planes como
-ciclos. V4 es una actualización real; V2/V3 conservan alcance histórico PP2.
+reales (uno funcional y otro datos/permisos), más Graph Engineering. Usados en
+SD: SD-PE01–PE03; V4–V6. No fabricar prompts/errores/mediciones, crear versiones
+de relleno ni contar planes como ciclos.
 
 ## Identificadores y verificación
 
@@ -104,20 +112,19 @@ según T §11; sus números no significan lo mismo. No renombrar métodos existe
 SD-Rxx son requisitos de trazabilidad; SD-Xxx son controles futuros adicionales.
 Todas las pruebas SD están pendientes de implementación/ejecución.
 
-En esta fase están autorizados los controles ligeros siguientes; usar entorno
-aislado y configuración sintética, sin leer .env reales:
+Controles ligeros usados en V6 (entorno aislado, configuración sintética, sin
+leer .env). Sin Django en el host: imagen `catalogo-servicios:local` con `src/`
+montado y PostgreSQL 17 efímero sin volumen en red `--internal`:
 
 ~~~bash
 python manage.py check
-python manage.py makemigrations cmdb --noinput
 python manage.py makemigrations --check --dry-run
+python manage.py migrate --noinput   # solo BD efímera/desarrollo
 ~~~
 
-Aplicar migración solo en base de desarrollo aislada cuando PostgreSQL esté
-disponible. No SQLite como sustituto de validación PostgreSQL. No ejecutar
-scripts/verify.sh ni suites completas. Nuevos modelos/constraints existen en
-src/cmdb y se conserva el bloqueo bulk/delete/full_clean/lock global. El alcance
-del ciclo es modelo, no rutas UI ni ejecución de grafos.
+No SQLite como sustituto de PostgreSQL. No ejecutar scripts/verify.sh ni suites
+completas sin autorización; nunca `down -v` sobre `datos_postgres`. Se conserva
+el bloqueo bulk/delete/full_clean/lock global en cmdb, service_desk y processes.
 
 La taxonomía mínima son los tipos Hardware/Software observados en C5/C6 sin
 padres informados. Nivel numérico derivado es convención, no denominación de
@@ -134,7 +141,6 @@ extremos ordenados por PK; rechazar orientación inválida, sin mutar campos
 silenciosamente en saves parciales. Clasificación sin ciclos; subgrafo activo de
 tipos que prohíben ciclos validado en conjunto. Sin autoenlaces.
 
-Comprobar fuentes/hashes, enlaces y diff. Dos commits como máximo:
-docs: documentar jerarquia y fuentes CMDB; feat: implementar modelo persistente
-CMDB. Si el aislamiento bloquea el original, entregar commits/parche de la copia
-y explicitar estado real; no presentar copia como cambios aplicados al original.
+Comprobar diff y enlaces. Commits V6 (máximo dos, sin push): `feat: integrar
+CMDB y modelo de Service Desk`; `feat: implementar colas permisos y procesos ITSM`.
+Los commits CMDB 2fb2521/35403e6 entraron por fast-forward, sin reescritura.

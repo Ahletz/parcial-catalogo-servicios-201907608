@@ -38,6 +38,8 @@ INSTALLED_APPS = [
     "catalog",
     "imports",
     "cmdb",
+    "processes",
+    "service_desk",
 ]
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
@@ -96,6 +98,15 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 STATIC_URL = "/static/"
 STATICFILES_DIRS = [BASE_DIR / "static"]
 STATIC_ROOT = BASE_DIR.parent / "staticfiles"
+# Adjuntos Service Desk: directorio privado, nunca servido como estático/media.
+SD_ADJUNTOS_DIR = Path(
+    os.environ.get("SD_ADJUNTOS_DIR", BASE_DIR.parent / "privado" / "adjuntos")
+)
+SD_ADJUNTO_MAX_BYTES = int(os.environ.get("SD_ADJUNTO_MAX_BYTES", 10 * 1024 * 1024))
+SD_ADJUNTO_EXTENSIONES = frozenset(
+    os.environ.get("SD_ADJUNTO_EXTENSIONES", "pdf,png,jpg,jpeg,txt").lower().split(",")
+)
+FILE_UPLOAD_PERMISSIONS = 0o640
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
     "staticfiles": {

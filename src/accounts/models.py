@@ -52,6 +52,8 @@ class Usuario(DomainValidationMixin, AbstractBaseUser, PermissionsMixin):
     class Rol(models.TextChoices):
         ADMINISTRADOR = "ADMINISTRADOR", "Administrador"
         CONSULTA = "CONSULTA", "Consulta"
+        # Sin escritura PP2; capacidades Service Desk solo por roles/colas.
+        OPERATIVO = "OPERATIVO", "Operativo Service Desk"
 
     identificador = models.CharField(
         max_length=150, unique=True, validators=[UnicodeUsernameValidator()]
@@ -76,7 +78,7 @@ class Usuario(DomainValidationMixin, AbstractBaseUser, PermissionsMixin):
                 Lower("identificador"), name="usuario_identificador_ci_uniq"
             ),
             models.CheckConstraint(
-                condition=Q(rol__in=["ADMINISTRADOR", "CONSULTA"]),
+                condition=Q(rol__in=["ADMINISTRADOR", "CONSULTA", "OPERATIVO"]),
                 name="usuario_rol_valido",
             ),
             models.CheckConstraint(
@@ -119,6 +121,19 @@ class Usuario(DomainValidationMixin, AbstractBaseUser, PermissionsMixin):
                     "puesto": (
                         "El traslado invalida responsables; "
                         "resuelve sus asignaciones primero."
+                    )
+                })
+        pierde_atencion = previous and (
+            (previous["is_active"] and not self.is_active)
+            or (previous["rol"] != self.Rol.CONSULTA and self.rol == self.Rol.CONSULTA)
+        )
+        if pierde_atencion:
+            ticket = apps.get_model("service_desk", "Ticket")
+            if ticket.objects.abiertos().filter(responsable_id=self.pk).exists():
+                raise ValidationError({
+                    "is_active": (
+                        "Tiene tickets abiertos asignados; reasígnalos o "
+                        "transfiérelos antes de desactivar o pasar a consulta."
                     )
                 })
 

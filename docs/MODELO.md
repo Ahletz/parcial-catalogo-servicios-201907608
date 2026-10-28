@@ -1,6 +1,7 @@
-# Modelo previsto de Service Desk y transcripción CMDB
+# Modelo de Service Desk y transcripción CMDB
 
-Fecha: 2026-10-29. **CMDB: modelo preparado; resto de SD propuesto.** El esquema
+Fecha: 2026-10-29. **V6: CMDB integrada y núcleo SD implementado (sección
+final); conocimiento, indicadores y generación siguen propuestos.** El esquema
 implementado del parcial se conserva en [MODELO_DATOS](MODELO_DATOS.md).
 Requisitos: [SERVICE_DESK](SERVICE_DESK.md); fuentes: [inventario](FUENTES_SERVICE_DESK.md).
 
@@ -232,3 +233,58 @@ afectados. Sin Ticket↔CI, generador, importador CMDB ni dashboard.
 Migración: src/cmdb/migrations/0001_initial.py; app registrada en settings.
 No tiene RunPython, semillas ni datos masivos. Resultados y limitaciones de
 validación reales: [FASE_CMDB](evidencias/FASE_CMDB.md).
+
+## Service Desk implementado (V6)
+
+Migraciones: `accounts.0002_rol_operativo`, `service_desk.0001_initial`,
+`processes.0001_initial`/`0002_initial` (la segunda añade FK hacia Ticket).
+Aplicadas solo en PostgreSQL efímero ([evidencia](evidencias/FASE_SERVICE_DESK.md)).
+Todas las entidades heredan `DomainModel`: `save()` valida con `full_clean`
+bajo `domain_transaction`; update/bulk/delete rechazados. Las marcadas
+**anexable** heredan `AppendOnlyModel` (no admiten modificación).
+
+```mermaid
+erDiagram
+  Usuario ||--o{ AsignacionRolSD : tiene
+  ColaServiceDesk ||--o{ MembresiaCola : autoriza
+  Usuario o|--o{ MembresiaCola : "sujeto usuario"
+  ColaServiceDesk ||--o{ Ticket : recibe
+  ServicioNivel2 ||--o{ Ticket : atiende
+  Usuario ||--o{ Ticket : "solicita/crea/responde"
+  Ticket ||--o{ TicketCI : afecta
+  CI ||--o{ TicketCI : participa
+  Ticket ||--o{ RelacionTicket : "origen/destino"
+  Ticket ||--o{ AccionTicket : audita
+  Ticket ||--o{ ComentarioTicket : documenta
+  Ticket ||--o{ AdjuntoTicket : evidencia
+  Ticket ||--o{ TransferenciaTicket : registra
+  Ticket ||--o{ Aprobacion : decide
+  Ticket ||--|| DetalleProceso : "detalle (uno de siete)"
+  DetalleEvento o|--o| Ticket : "incidente vinculado"
+  Ticket ||--o{ Notificacion : avisa
+```
+
+| Entidad (app) | Campos y reglas implementadas |
+|---|---|
+| Usuario (accounts) | `rol` ∈ ADMINISTRADOR, CONSULTA, **OPERATIVO** (CHECK). No se desactiva ni pasa a CONSULTA con tickets abiertos asignados. |
+| AsignacionRolSD (service_desk) | Usuario + rol SD (SOLICITANTE, AGENTE, APROBADOR), activo; único por par; no se desactiva si sostiene tickets asignados. |
+| ColaServiceDesk (service_desk) | `codigo` único, nombre, descripción, `estado`, `proceso` (uno de siete), `nivel_soporte` 0–4, `regla_ordenamiento`, `objetivo_primera_atencion`, `objetivo_resolucion`. Proceso inmutable con tickets; baja bloqueada con tickets abiertos. |
+| MembresiaCola (service_desk) | Cola + exactamente un sujeto (usuario **o** rol, CHECK) + `puede_consultar/atender/transferir/aprobar/administrar`, activo. Únicos parciales cola+usuario y cola+rol. |
+| Ticket (service_desk) | `identificador` UUID, `secuencia`/`numero` SD-NNNNNN únicos, título, descripción, solicitante, creador, `servicio` N2 (N1 derivado por propiedad, no almacenado), tipo, subtipo, proceso, cola, responsable, estado, prioridad 1–4, impacto, urgencia, canal, resolución, `created_at`, `updated_at`, `fecha_resolucion`, `fecha_cierre`, `motivo_sin_ci`, `revision_manual`. Tipo/subtipo/proceso coherentes; cola del mismo proceso; estado y transición definidos; aprobación vigente para estados que la exigen; responsable activo, no CONSULTA y con ATENDER; cierre⇔estado final; datos de alta inmutables. |
+| TicketCI (anexable) | Ticket + CI activo + actor + observación; único por par. Cero CI exige `motivo_sin_ci` al crear. |
+| RelacionTicket (anexable) | Origen, destino, tipo (EVENTO_INCIDENTE, INCIDENTE_PROBLEMA, PROBLEMA_CAMBIO, RELACIONADO), actor, motivo. Sin autorrelación, único por terna, un solo incidente por evento, procesos de extremos validados. |
+| AccionTicket (anexable) | Ticket, actor, `created_at`, acción, campo, `valor_anterior`/`valor_nuevo` JSON, motivo. Bitácora sin modificación ni borrado. |
+| ComentarioTicket (anexable) | Ticket, autor, texto, visibilidad PUBLICO/INTERNO. |
+| AdjuntoTicket (anexable) | UUID, ticket, archivo (almacenamiento privado `SD_ADJUNTOS_DIR`, ruta `<ticket>/<uuid>.<ext>`), nombre original saneado, extensión, MIME, tamaño, SHA-256, `subido_por`, `created_at`, visibilidad. |
+| TransferenciaTicket (anexable) | Ticket, cola origen/destino (distintas), responsable anterior/nuevo, actor, motivo obligatorio, `created_at`. |
+| Notificacion (anexable) | Evento, incidente, cola destino, mensaje; única por evento+incidente. Aviso interno, sin correo. |
+| Aprobacion (processes, anexable) | Ticket, aprobador, decisión, estado origen, motivo (obligatorio si rechaza), huella SHA-256 del contenido. Aprobador ≠ solicitante/creador (y ≠ beneficiario en accesos), activo y no CONSULTA. |
+| DetalleNuevoServicio | Necesidad, viabilidad, modo CREAR/VINCULAR, `servicio_resultante`, propuesta (código, nombre, N1, sección, descripción). |
+| DetalleCambio | Impacto, riesgo, análisis, plan de pruebas, plan de reversión, fecha planificada, resultado de validación, éxito, evidencia de reversión. CI afectados = TicketCI (incluidos en la huella). |
+| DetalleIncidente | Afectación, categoría I0–I6, categoría sugerida (calculada), motivo de categoría, duración estimada/real (no negativas), redundancia, diagnóstico, solución aplicada, nivel de escalamiento 0–4. |
+| DetalleEvento | `clave_evento` única e inmutable, fuente, categoría E0–E3, evaluación, respuesta, incidente (no reemplazable). |
+| DetalleProblema | Causa raíz, workaround, solución definitiva, justificación sin cambio; error conocido = causa + workaround. |
+| DetalleAcceso | Beneficiario, recurso, permiso, acción PROVISION/REVOCACION, evidencia, resultado de validación. |
+| DetalleServicioTecnologia | Resultado de validación, detalle de cumplimiento. |
+
+Procesos, permisos y flujos: [PROCESOS](PROCESOS.md#implementación-vigente-v6).

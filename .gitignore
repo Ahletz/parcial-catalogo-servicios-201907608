@@ -49,3 +49,6 @@ target/
 
 # Material del parcial no exigido como entregable; conservar localmente.
 data/201907608_P2_SA.pdf
+
+# Adjuntos privados de Service Desk (datos de ejecución).
+privado/
