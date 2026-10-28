@@ -1,5 +1,28 @@
 # Catálogo de servicios — Software Avanzado
 
+## Ampliación Service Desk: contexto V4 (2026-10-29)
+
+La base implementada sigue siendo el Parcial Práctico 2. La nueva tarea está
+analizada y documentada; **Service Desk todavía no está implementado**. Esta
+fase no ejecuta pruebas ni modifica funcionalidades. Contexto vigente en
+[AGENTS](AGENTS.md) y [V4](docs/contexto/CONTEXTO_V4.md).
+
+| Documento de la ampliación | Contenido / estado |
+|---|---|
+| [SERVICE_DESK](docs/SERVICE_DESK.md) | Requisitos SD-R01–39, brechas, módulos/estructura y decisiones pendientes. |
+| [FUENTES_SERVICE_DESK](docs/FUENTES_SERVICE_DESK.md) | Originales, hashes, páginas/celdas y discrepancias. |
+| [MODELO](docs/MODELO.md) | ER/diccionario propuestos, transcripción de CMDB y grafos. |
+| [PROCESOS](docs/PROCESOS.md) | Siete flujos, tipos, colas, permisos, eventos/incidentes e indicadores previstos. |
+| [IA](docs/IA.md) | Cinco ingenierías, prompt real de análisis y evidencia futura pendiente. |
+| [PRUEBAS](docs/PRUEBAS.md) | Matriz requisito→módulo→implementación→prueba y SD-P01–SD-P18, no ejecutadas. |
+
+Se conserva la nomenclatura PP2-P01–P12 para los escenarios antiguos; SD-P01–P18
+son escenarios distintos. La taxonomía original de dispositivos no está
+enumerada en las fuentes disponibles: pendiente SD-DP01, sin clasificación
+inventada. No existen comandos nuevos de generación CMDB ni harness SD.
+Los comandos y resultados del resto de este README corresponden al parcial.
+La aplicación futura debe preservar esos contratos.
+
 Proyecto individual: parcial-catalogo-servicios-201907608. Carné: **201907608**.
 Autor: **Aheltz** (nombre configurado en Git; nombre completo PENDIENTE DE CONFIRMAR).
 Repositorio: https://github.com/Ahletz/parcial-catalogo-servicios-201907608.
@@ -173,7 +196,7 @@ scripts/verify-persistence.sh  P12
 data/CatalogoServicios.xlsx   original inmutable
 docs/RESOLUCION.md         explicación técnica/DER/diccionario
 docs/MATRIZ_TRAZABILIDAD.md cobertura individual y evidencias
-docs/contexto/            V1, V2, V3
+docs/contexto/            V1–V3 históricos PP2; V4 vigente Service Desk
 docs/prompts/             cinco temas y dos revisiones reales
 docs/evidencias/          resultados de las cuatro fases
 ~~~

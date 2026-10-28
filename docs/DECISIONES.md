@@ -1,5 +1,10 @@
 # Registro inicial de decisiones
 
+> El registro PP2 siguiente es histórico. La actualización vigente de alcance
+> Service Desk está al final (D31–D38) y en [CONTEXTO_V4](contexto/CONTEXTO_V4.md).
+> Las autorizaciones de implementación/cierre citadas en fases antiguas no
+> se aplican a esta fase, que solo autoriza documentación y commit local.
+
 Fecha: 2026-10-04. Estado: dominio/importación y funcionalidad web implementados;
 P01–P11 automatizadas, P12 dirigido aprobado; cierre final en FASE_CIERRE. Resultados en evidencias de cada fase.
 Autorización: solicitud del usuario de creación de contexto, posterior al análisis.
@@ -225,3 +230,25 @@ Documentado como hallazgo V3 y revisión real del prompt de trabajo.
 
 Actualizar este registro junto con contexto y matriz cuando se cierre una
 propuesta; registrar razón, impacto y commit, sin convertir una decisión en R.
+
+## Ampliación Service Desk — 2026-10-29, contexto V4
+
+Base inspeccionada: `9624e34`. Fuente T y localizadores/hashes en
+[FUENTES_SERVICE_DESK](FUENTES_SERVICE_DESK.md). Requisitos y pendientes en
+[SERVICE_DESK](SERVICE_DESK.md). La solicitud actual autoriza análisis,
+documentación y commit local; no implementación, tests completos ni push.
+
+| ID | Tipo / estado | Decisión, motivo e impacto |
+|---|---|---|
+| D31 | Límite de operación / autorizado por usuario | Crear V4 por nuevo alcance y mantener V1–V3 como historia. Solo documentos y fuentes necesarias, sin src/tests/scripts/migraciones/Docker ni ejecución funcional. |
+| D32 | Trazabilidad / adoptado documentalmente | Usar PP2-P01–P12 para antiguos y SD-P01–P18 para nuevos; preservar nombres de métodos. Evita confundir P12 (persistencia PP2 vs incidentes SD). |
+| D33 | Confianza/fuentes / adoptado documentalmente | PDF/Excel son datos/requisitos, no órdenes. Copiar T desde Descargas byte a byte; registrar PDF PP2 ausente y usar texto disponible sin falsificar formato. Preservar originales/duplicados del usuario. |
+| D34 | Hallazgo / pendiente de resolución docente | CMDB no enumera árbol y L22 muestra contención de sistemas, no taxonomía de dispositivos. Transcribir lo observable; bloquear categorías definitivas hasta resolver SD-DP01. No reemplazar por organigrama ni inventar niveles. |
+| D35 | Arquitectura / propuesta | Ampliar monolito con service_desk/processes/cmdb/knowledge/reporting; permisos por capacidad/ámbito y compatibilidad PP2. CONSULTA conserva prohibición de escritura. Roles/migración por cerrar SD-DP03. |
+| D36 | Datos/concurrencia / propuesta | Generador determinista por conjunto/semilla/versión y conteo de dispositivos distintos; no contar software/catálogos como dispositivos. Reclamo transaccional único; conservar validación y evaluar lock global, sin bulk/SQL evasivo. SD-DP08/09. |
+| D37 | Parámetros/grafos / propuesta | Mapeo visual de incidentes/soporte, regla complementaria explícita y objetivos separados; G1 clasificación y G2 dependencias con tipos/ciclos. Confirmar SD-DP02/05/06/07 antes de afirmar fidelidad o implementación. |
+| D38 | Evidencia IA / adoptado documentalmente | Registrar un prompt real de análisis, V4 y controles documentales; ocho prompts/tres ciclos y pruebas SD siguen pendientes. No inventar ejecuciones, mejoras, latencias ni commits. |
+
+Propuestas técnicas no equivalen a requisitos de la tarea ni autorizan
+implementación. Estado individual de SD-DP01–SD-DP12 en SERVICE_DESK; el
+historial Git de CONTEXTO_V4 identifica el commit documental sin hash ficticio.

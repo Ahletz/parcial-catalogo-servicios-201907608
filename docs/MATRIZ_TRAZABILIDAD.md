@@ -1,5 +1,10 @@
 # Matriz final de trazabilidad
 
+> Matriz histórica del PP2: interpretar sus P01–P12 como **PP2-P01–PP2-P12**.
+> No se renombraron métodos ni se reejecutaron controles. La matriz de la nueva
+> tarea, con **SD-P01–SD-P18**, está en [PRUEBAS](PRUEBAS.md); todos sus
+> resultados funcionales siguen pendientes de implementación y ejecución.
+
 Fuente: [REQUISITOS](REQUISITOS.md), ENUNCIADO §1–10. Fecha: 2026-10-04.
 Estados: COMPLETO exige evidencia ejecutada/documental real; PENDIENTE MANUAL
 separa metadatos/acceso/entrega que el agente no puede confirmar. Las fases

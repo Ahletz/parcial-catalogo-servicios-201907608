@@ -1,5 +1,11 @@
 # Requisitos del proyecto
 
+> Estos IDs conservan el contrato PP2. La ampliación se registra en
+> [SERVICE_DESK](SERVICE_DESK.md) y su aceptación futura en
+> [PRUEBAS](PRUEBAS.md). El límite histórico de no requerir tickets se refiere
+> al parcial; la tarea nueva sí los exige. No implica autorización para
+> implementar en la fase documental actual.
+
 Fuente normativa: [ENUNCIADO.md](../ENUNCIADO.md), secciones 1–10.
 Fecha de registro: 2026-10-04, America/Guatemala.
 Estado: funcionalidad completa; P01–P11 y P12 dirigido aprobados; cierre final
@@ -78,7 +84,7 @@ Organización y responsables son requisitos nuevos; no existen como datos del Ex
 | GEN01 | Trabajo individual, comprender código y justificar decisiones tomadas con IA. | §1, §8.10 |
 
 P01–P12 y sus resultados esperados están en
-[AGENTS.md](../AGENTS.md#estado-de-aceptación-p01p12); su implementación, prueba y
+[MATRIZ_TRAZABILIDAD.md](MATRIZ_TRAZABILIDAD.md); su implementación, prueba y
 evidencia futuras se relacionan en [MATRIZ_TRAZABILIDAD.md](MATRIZ_TRAZABILIDAD.md).
 P01–P12 se relacionan individualmente en la matriz; evidencias reales en
 FASE_IMPORTACION, FASE_FUNCIONAL y FASE_CIERRE.
