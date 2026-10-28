@@ -85,3 +85,7 @@ control `git diff --cached --check` los reporta al añadirla; se preservan sus
 bytes/hash por ser fuente inmutable. El control de los Markdown authored se
 ejecuta con `git diff --cached --check -- '*.md'`; no se corrige ni se oculta
 esa diferencia mediante edición de la fuente o configuración global de Git.
+
+## Reinspección CMDB para V5
+
+[ANALISIS_CMDB](ANALISIS_CMDB.md) registra todas las hojas/metadatos y comparación L22. Los hashes de las fuentes se conservan. El modelo mínimo ya se decide sin inventar niveles; no se afirma fidelidad a una taxonomía adicional ausente.

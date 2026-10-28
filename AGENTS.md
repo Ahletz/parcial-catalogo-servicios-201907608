@@ -1,29 +1,27 @@
-# Contexto operativo del proyecto — V4: ampliación Service Desk
+# Contexto operativo — V5: modelo persistente CMDB
 
 Fecha: 2026-10-29, America/Guatemala. Contexto vigente:
-[CONTEXTO_V4](docs/contexto/CONTEXTO_V4.md). Base de código inspeccionada:
-`9624e34` en main. V1–V3 son historia del parcial; el cambio V4 se justifica
-por nuevos requisitos, no por mero progreso funcional.
+[CONTEXTO_V5](docs/contexto/CONTEXTO_V5.md); V4 es antecedente. Base 396aa81.
 
 ## Mandato y estado actual
 
-La solicitud vigente autoriza **solo inspección y documentación**, actualización
-de contexto y commit local. No implementar modelos, migraciones, vistas,
-comandos de aplicación, generadores, pruebas ni cambios de Docker/dependencias.
-No ejecutar suites completas ni pruebas funcionales: esta fase no las requiere.
-No iniciar contenedores, migrar, importar/generar datos persistentes, publicar,
-hacer push ni tag. Las autorizaciones de cierre PP2 citadas en documentos
-históricos no autorizan trabajo funcional de Service Desk.
+La solicitud actual autoriza análisis real de CMDB/L22 y **solo el modelo CMDB**:
+clasificación, ubicación, CI, relaciones CI–CI/CI–ServicioNivel2, migración y
+registro de app; documentación y hasta dos commits locales. Reutilizar Usuario
+y DomainModel. No crear tickets/workflows, dashboard, generador de 5,000,
+importador CMDB, UI ni recorridos completos de grafos. No ejecutar P01–P18 ni
+suite completa; únicamente check y comprobación/creación de migraciones, con
+aplicación de esquema en desarrollo aislado si es viable. Sin push/tag.
 
-Existe la base funcional PP2: Django, PostgreSQL, accounts, organization,
-catalog, imports, plantillas y Docker. Se inspeccionaron 165 métodos de prueba
-PP2 y una comprobación operativa de persistencia. **No hay implementación SD.**
-Los resultados históricos permanecen históricos; no afirmar suite/harness global
-aprobado si falta la salida real correspondiente en evidencias.
+La base PP2 se conserva. El modelo CMDB es parcial respecto a toda la tarea SD;
+no implica que funcionen tickets, portales, indicadores o generación. El entorno
+actual bloqueó Docker y escritura del original: los cambios se preparan en una
+copia permitida, sin afirmar aplicación al original ni migración PostgreSQL
+ejecutada. Detalles/reproducción en [FASE_CMDB](docs/evidencias/FASE_CMDB.md).
 
 ## Orden de lectura y selección del contexto
 
-1. Este archivo y [CONTEXTO_V4](docs/contexto/CONTEXTO_V4.md).
+1. Este archivo, [V4](docs/contexto/CONTEXTO_V4.md), [V5](docs/contexto/CONTEXTO_V5.md) y [ANALISIS_CMDB](docs/ANALISIS_CMDB.md).
 2. [README](README.md), [RESOLUCION](docs/RESOLUCION.md),
    [DECISIONES](docs/DECISIONES.md), [MODELO_DATOS](docs/MODELO_DATOS.md),
    [REQUISITOS PP2](docs/REQUISITOS.md) y
@@ -78,7 +76,7 @@ No borrar ni renombrar los duplicados aportados por el usuario.
   Cambios pequeños, diff revisado, no reescribir historia ni añadir archivos
   ajenos a la tarea. Respetar modificaciones previas del usuario.
 
-## Contrato nuevo a preparar, no a implementar todavía
+## Contrato restante de Service Desk (fuera de esta fase)
 
 Siete procesos de T §6, ≥7 colas, ≥35 tickets (5/proceso), roles admin,
 solicitante, agente, aprobador y consulta; seis tipos L25 con mapeo explícito.
@@ -88,11 +86,11 @@ CMDB y ≥5,000 dispositivos sintéticos persistidos, semilla/idempotencia,
 clasificación de origen, relaciones y recorrido de servicios potencialmente
 afectados. FAQ/portal/consola/tablero e indicadores con reglas temporales.
 
-**Bloqueos de diseño:** fuentes no enumeran taxonomía de dispositivos; no usar
-organigrama o SKMS/CMS como reemplazo. Transcripción disponible en MODELO.
-Aclarar los “ambos grafos”; propuesta G1 clasificación/G2 dependencias. Resolver
-SD-DP01–SD-DP12 antes de implementar sus componentes. Otros contratos propuestos
-están marcados como decisiones, nunca como hechos de las diapositivas.
+**Límite de fidelidad:** fuentes no enumeran taxonomía adicional de dispositivos;
+el modelo mínimo se decide en ANALISIS_CMDB, sin usar organigrama ni SKMS/CMS
+como categorías. G1 clasificación/G2 técnico adoptados para proyecto, pendientes
+de confirmación docente. SD-DP01/02/08/09 tienen estado actualizado en V5; resto
+de pendientes se mantiene. Ninguna decisión se atribuye como dato de diapositiva.
 
 T exige ≥8 prompts usados/2 mejoras, ≥3 actualizaciones justificadas y ≥3 ciclos
 reales (uno funcional y otro datos/permisos), más Graph Engineering. No fabricar
@@ -106,18 +104,37 @@ según T §11; sus números no significan lo mismo. No renombrar métodos existe
 SD-Rxx son requisitos de trazabilidad; SD-Xxx son controles futuros adicionales.
 Todas las pruebas SD están pendientes de implementación/ejecución.
 
-En esta fase solo lectores, inventario/hashes, revisión documental/enlaces y Git:
+En esta fase están autorizados los controles ligeros siguientes; usar entorno
+aislado y configuración sintética, sin leer .env reales:
 
-```bash
-git status --short
-git diff --check
-git diff --stat
-git log -1 --diff-filter=A --format='%H %s' -- docs/contexto/CONTEXTO_V4.md
-```
+~~~bash
+python manage.py check
+python manage.py makemigrations cmdb --noinput
+python manage.py makemigrations --check --dry-run
+~~~
 
-README conserva comandos **existentes** de Docker/importación/demo/pruebas para
-fases futuras autorizadas. No ejecutar scripts/verify.sh ahora: corre la suite
-completa. No documentar generate_cmdb ni un harness SD como comandos existentes;
-son contratos futuros. Mantener pruebas aisladas y volúmenes de evaluación
-intactos; no down -v ni borrado silencioso. El commit permitido es documental,
-con originales necesarios; sin push/tag y sin código funcional.
+Aplicar migración solo en base de desarrollo aislada cuando PostgreSQL esté
+disponible. No SQLite como sustituto de validación PostgreSQL. No ejecutar
+scripts/verify.sh ni suites completas. Nuevos modelos/constraints existen en
+src/cmdb y se conserva el bloqueo bulk/delete/full_clean/lock global. El alcance
+del ciclo es modelo, no rutas UI ni ejecución de grafos.
+
+La taxonomía mínima son los tipos Hardware/Software observados en C5/C6 sin
+padres informados. Nivel numérico derivado es convención, no denominación de
+fuente. No inventar categorías ni usar SKMS/CMS u organigrama para rellenarlas.
+SD-DP01 se resuelve como modelo mínimo; la jerarquía docente adicional permanece
+sin evidencia y SD-P04 no se declara aprobado. G1 clasificación/G2 técnico quedan
+definidos para el proyecto; confirmar interpretación docente antes de la defensa.
+
+Nuevas asociaciones requieren referencias activas; conservar históricos.
+Atributos JSON declarativos por clasificación, sin herencia implícita ni IP
+universal. No cambiar esquema/marca de dispositivo invalidando CI existentes.
+No modificar flags de tipo con relaciones históricas. No dirigidas exigen
+extremos ordenados por PK; rechazar orientación inválida, sin mutar campos
+silenciosamente en saves parciales. Clasificación sin ciclos; subgrafo activo de
+tipos que prohíben ciclos validado en conjunto. Sin autoenlaces.
+
+Comprobar fuentes/hashes, enlaces y diff. Dos commits como máximo:
+docs: documentar jerarquia y fuentes CMDB; feat: implementar modelo persistente
+CMDB. Si el aislamiento bloquea el original, entregar commits/parche de la copia
+y explicitar estado real; no presentar copia como cambios aplicados al original.

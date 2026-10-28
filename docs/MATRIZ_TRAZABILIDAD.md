@@ -93,3 +93,15 @@ T04/T16–T21 Docker/harness/P12/ciclo/documentos/ensayo: implementadas,
 aceptación final registrada en C tras ejecutar. T20 cubre cinco temas/dos mejoras
 reales, V1/V2/V3. T22 publicación/acceso/etiqueta/entrega: pendiente humana,
 sin acciones remotas ejecutadas. No convertir metadatos desconocidos en evidencia.
+
+## Avance CMDB (2026-10-29)
+
+Modelo de seis entidades y migración preparados en fase V5; detalle en [MODELO](MODELO.md), [ANALISIS_CMDB](ANALISIS_CMDB.md) y [FASE_CMDB](evidencias/FASE_CMDB.md). No equivale a aprobación SD-P03/04/14/18. Matriz SD principal en [PRUEBAS](PRUEBAS.md).
+
+| Requisito SD | Implementación de esta fase | Prueba futura / límite |
+|---|---|---|
+| SD-R24 | ClasificacionCI, diagrama/diccionario y mínimos observados | SD-P04; taxonomía adicional sin fuente, pendiente |
+| SD-R25/26 | CI/UbicacionCI/esquema JSON/procedencia | SD-X06/SD-P03; sin importador ni generador |
+| SD-R27 | ServicioCI y FK Usuario | SD-P14; sin TicketCI |
+| SD-R29/34 | Modelo técnico tipado y guardas contra ciclos | SD-P04/14; sin recorrido público |
+| SD-R31 | V5 y prompt SD-PE02 | Contexto real; no ciclo funcional ejecutado |

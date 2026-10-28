@@ -124,3 +124,7 @@ para revisar documentación.
 IDs, coherencia del alcance y `git diff --check`. No equivale a aprobar SD-P01–P18.
 Resultados de esos controles se registran en CONTEXTO_V4 y en el resumen de fase;
 las evidencias históricas no se modifican para aparentar ejecuciones nuevas.
+
+## Estado parcial V5 — modelo CMDB
+
+ClasificacionCI/UbicacionCI/CI/TipoRelacionCI/RelacionCI/ServicioCI y migración preparados. Check y revisión de migraciones son controles ligeros, no SD-P04 ni pruebas de ciclos. Resultados reales y limitación PostgreSQL/original en [FASE_CMDB](evidencias/FASE_CMDB.md). La taxonomía adicional sigue sin fuente.

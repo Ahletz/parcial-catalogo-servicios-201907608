@@ -115,3 +115,7 @@ El enunciado no exige Neo4j, una librería específica ni llamadas a IA en runti
 | Semilla / conjunto sintético | Parámetro reproducible / identidad de datos generados para evitar duplicados y aislar pruebas. |
 | PP2-Pxx / SD-Pxx | Escenario del parcial / escenario nuevo; números iguales no significan pruebas iguales. |
 | Requisito / decisión / inferencia | Obligación fuente / elección de proyecto / conclusión derivada, con evidencia y estado separados. |
+
+## Avance real CMDB — V5
+
+Segundo prompt SD realmente usado: [SD-PE02](prompts/SD_P02_CMDB.md); actualización justificada [V5](contexto/CONTEXTO_V5.md). Modelo/migración preparados y validaciones ligeras en [FASE_CMDB](evidencias/FASE_CMDB.md). Sin pruebas funcionales, no acreditar un ciclo completo de Loop ni una mejora de prompt por revisión estática.

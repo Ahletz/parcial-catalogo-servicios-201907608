@@ -1,6 +1,6 @@
 # Modelo previsto de Service Desk y transcripción CMDB
 
-Fecha: 2026-10-29. **Propuesta sin modelos ni migraciones nuevas.** El esquema
+Fecha: 2026-10-29. **CMDB: modelo preparado; resto de SD propuesto.** El esquema
 implementado del parcial se conserva en [MODELO_DATOS](MODELO_DATOS.md).
 Requisitos: [SERVICE_DESK](SERVICE_DESK.md); fuentes: [inventario](FUENTES_SERVICE_DESK.md).
 
@@ -157,3 +157,78 @@ recorrido. La vista navega por vecindarios paginados, no dibuja 5,000 nodos de
 golpe. Se propone almacenar nodos/aristas en PostgreSQL con FK, sin exigir otro
 motor. Grafo de flujos de trabajo adicional en PROCESOS; confirmar con docente
 la expresión «ambos grafos» (SD-DP02). No hay grafo ejecutable implementado.
+
+## CMDB persistente: contrato de la implementación de esta fase
+
+El análisis definitivo por celda/página y la comparación completa están en
+[ANALISIS_CMDB](ANALISIS_CMDB.md). Modelo mínimo: Hardware/Software como tipos
+observados independientes; ningún nivel inferior inferido. El bosque admite
+profundidad variable con nivel derivado (raíz=1, decisión técnica). No se pueblan
+categorías en la migración; falta confirmar cualquier taxonomía original más
+detallada antes de afirmar fidelidad exhaustiva.
+
+~~~mermaid
+erDiagram
+    ClasificacionCI o|--o{ ClasificacionCI : padre
+    ClasificacionCI ||--o{ CI : clasifica
+    UbicacionCI ||--o{ CI : ubica
+    Usuario ||--o{ CI : responsable
+    CI ||--o{ ServicioCI : vincula
+    ServicioNivel2 ||--o{ ServicioCI : servicio
+    TipoRelacionCI ||--o{ RelacionCI : tipifica
+    CI ||--o{ RelacionCI : origen
+    CI ||--o{ RelacionCI : destino
+~~~
+
+| Modelo | Campos persistentes / restricciones |
+|---|---|
+| ClasificacionCI | Código único, nombre, estado, padre PROTECT opcional, orden no negativo, esquema_atributos JSON, es_dispositivo=false por defecto y datos_origen JSON. CHECK contra autopadre y validación de ancestros/ciclos. |
+| UbicacionCI | Código único, nombre, estado, observaciones y datos_origen; catálogo plano independiente de organización. |
+| CI | Código único, nombre, estado administrativo; clasificación, ubicación y Usuario responsable obligatorios/PROTECT; descripción nullable, atributos y datos_origen JSON; propiedad es_dispositivo derivada de clasificación; M:N servicios mediante ServicioCI. |
+| TipoRelacionCI | Código único, nombre, estado, origen JSON; dirigida=true y permite_ciclos=false explícitos/configurables. No cambiar flags una vez tenga relaciones. |
+| RelacionCI | FK tipo/origen/destino PROTECT, estado, fecha y observaciones; UNIQUE(tipo,origen,destino), CHECK origen≠destino. No dirigida exige origen.pk menor que destino.pk. |
+| ServicioCI | FK CI/N2 PROTECT, estado, fecha y observaciones; UNIQUE(ci,servicio). Usar ServicioCI.save, no eludir dominio con servicios.add/bulk. |
+
+Todos heredan timestamps/revision_manual y guardas de DomainModel. Las nuevas
+referencias exigen jerarquía activa; referencias históricas se conservan.
+Desactivar un padre/Usuario/CI/servicio con dependencias activas se bloquea por
+las mismas guardas existentes, que reconocen las relaciones nuevas. No cambian
+los modelos PP2 ni sus migraciones.
+
+Esquema de atributos por clasificación, sin herencia implícita: objeto con claves
+snake_case y reglas tipo/obligatorio/opciones. Tipos: texto (hasta 255 caracteres),
+texto_largo, entero, numero finito, booleano, fecha ISO e ip. Valores no declarados,
+tipos incorrectos y obligatorios ausentes se rechazan; booleanos no son números.
+Un cambio de esquema no puede invalidar CI existentes, incluidos históricos.
+
+Ejemplo **de configuración del proyecto**, no taxonomía ni datos insertados:
+
+~~~json
+{
+  "numero_serie": {"tipo": "texto", "obligatorio": false},
+  "ip": {"tipo": "ip", "obligatorio": false}
+}
+~~~
+
+Una clase de software puede definir version/licencia y omitir ip/serie.
+Los originales se preservan en atributos o datos_origen según mapeo; campos
+operativos/código/FK/orden/flags/esquema son extensiones de la tarea/proyecto.
+No hay política de estado_actual del Excel inventada: el estado administrativo
+se distingue del atributo original que puede conservarse.
+
+**Ciclos:** clasificación nunca cíclica. Para relaciones técnicas activas, se
+considera conjuntamente el subgrafo de todos los tipos con permite_ciclos=false;
+se rechaza una arista que cierre un camino, incluso entre tipos distintos.
+No dirigidas se consideran en ambas direcciones para esa validación. Tipos con
+permite_ciclos=true se excluyen del subgrafo restrictivo. Ningún tipo admite
+autoenlace. Los flags quedan congelados si hay relaciones históricas. Se
+recomiendan depende_de/alojado_en dirigidos acíclicos y conectado_a no dirigido
+cíclico como decisiones del proyecto, sin poblar tipos por migración.
+
+Esto prepara G1 clasificación y G2 técnico para una fase posterior. La búsqueda
+interna para rechazar ciclos no es una API, UI ni recorrido de servicios
+afectados. Sin Ticket↔CI, generador, importador CMDB ni dashboard.
+
+Migración: src/cmdb/migrations/0001_initial.py; app registrada en settings.
+No tiene RunPython, semillas ni datos masivos. Resultados y limitaciones de
+validación reales: [FASE_CMDB](evidencias/FASE_CMDB.md).

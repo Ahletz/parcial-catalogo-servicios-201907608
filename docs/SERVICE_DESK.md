@@ -134,3 +134,7 @@ No hace falta resolver todos los pendientes para terminar esta fase documental.
 SD-DP01 bloquea concretar la clasificación; los demás acotan decisiones que deben
 cerrarse antes de implementar su componente. No se omiten requisitos por falta
 de una fuente: se marcan como pendientes verificables.
+
+## Actualización V5 — decisiones CMDB
+
+SD-DP01: resuelto el bosque mínimo respaldado por tipos Hardware/Software sin aristas; sigue pendiente fuente para una taxonomía docente adicional. SD-DP02: se adoptan G1 clasificación/G2 técnico para el proyecto; interpretación docente sin confirmar. SD-DP08: marca explícita de dispositivo en clasificación, sin generador ni conteos nuevos. SD-DP09: conservar lock/guardas actuales, sin mediciones masivas. Modelo de seis entidades/migración en [MODELO](MODELO.md); diferencias y evidencia en [ANALISIS_CMDB](ANALISIS_CMDB.md). Resto de pendientes V4 sin cambios.

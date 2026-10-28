@@ -1,11 +1,12 @@
 # Catálogo de servicios — Software Avanzado
 
-## Ampliación Service Desk: contexto V4 (2026-10-29)
+## Ampliación Service Desk: contexto V5 (2026-10-29)
 
-La base implementada sigue siendo el Parcial Práctico 2. La nueva tarea está
-analizada y documentada; **Service Desk todavía no está implementado**. Esta
-fase no ejecuta pruebas ni modifica funcionalidades. Contexto vigente en
-[AGENTS](AGENTS.md) y [V4](docs/contexto/CONTEXTO_V4.md).
+Se conserva la base PP2. La fase V5 añade el modelo persistente CMDB y su
+migración en una copia aislada (limitación del entorno documentada), sin UI,
+generador, importación CMDB ni tickets. No se ejecutaron pruebas funcionales;
+solo controles ligeros. Contexto vigente en [AGENTS](AGENTS.md) y
+[V5](docs/contexto/CONTEXTO_V5.md); [V4](docs/contexto/CONTEXTO_V4.md) es antecedente.
 
 | Documento de la ampliación | Contenido / estado |
 |---|---|
@@ -229,3 +230,9 @@ Entregar por el medio indicado: URL, nombre completo, carné 201907608, rama mai
 SHA mostrado y etiqueta parcial-v2.0. Mantener el commit disponible durante
 calificación. Nombre completo y versión exacta de IA requieren confirmación
 manual; no se inventan. La auditoría distingue verificación local de entrega remota.
+
+## Modelo CMDB — V5
+
+Se prepara el módulo persistente cmdb (seis entidades) y su migración, sin importador, generador, UI, tickets ni recorridos de impacto. [ANALISIS_CMDB](docs/ANALISIS_CMDB.md), [MODELO](docs/MODELO.md), [V5](docs/contexto/CONTEXTO_V5.md), [prompt CMDB](docs/prompts/SD_P02_CMDB.md) y [evidencia](docs/evidencias/FASE_CMDB.md). V4 se conserva como análisis inicial; el mandato vigente es V5.
+
+La aplicación de la migración en un entorno disponible se hace con el procedimiento Docker existente (init o manage.py migrate); no carga CI ni categorías automáticamente. Usar solo check y makemigrations --check --dry-run en esta fase; no scripts/verify.sh. La evidencia explica la copia aislada y el bloqueo del repositorio original, sin presentarlo como cambio ya aplicado allí.

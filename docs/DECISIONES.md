@@ -1,9 +1,9 @@
 # Registro inicial de decisiones
 
 > El registro PP2 siguiente es histórico. La actualización vigente de alcance
-> Service Desk está al final (D31–D38) y en [CONTEXTO_V4](contexto/CONTEXTO_V4.md).
+> Service Desk está al final (D31–D46), con [V4](contexto/CONTEXTO_V4.md) histórico y [V5](contexto/CONTEXTO_V5.md) vigente.
 > Las autorizaciones de implementación/cierre citadas en fases antiguas no
-> se aplican a esta fase, que solo autoriza documentación y commit local.
+> se aplican automáticamente a otras fases. La solicitud CMDB autoriza modelo, migración y controles ligeros; sin carga masiva ni suite.
 
 Fecha: 2026-10-04. Estado: dominio/importación y funcionalidad web implementados;
 P01–P11 automatizadas, P12 dirigido aprobado; cierre final en FASE_CIERRE. Resultados en evidencias de cada fase.
@@ -252,3 +252,24 @@ documentación y commit local; no implementación, tests completos ni push.
 Propuestas técnicas no equivalen a requisitos de la tarea ni autorizan
 implementación. Estado individual de SD-DP01–SD-DP12 en SERVICE_DESK; el
 historial Git de CONTEXTO_V4 identifica el commit documental sin hash ficticio.
+
+## CMDB — decisiones D39–D46, 2026-10-29
+
+Solicitud actual: implementar solo modelo CMDB, relaciones y migración; sin
+5,000 CI, tickets, workflows, dashboard, grafos completos ni pruebas pesadas.
+Fuente: [ANALISIS_CMDB](ANALISIS_CMDB.md), con hojas/celdas y páginas.
+
+| ID | Estado | Decisión y justificación |
+|---|---|---|
+| D39 | Adoptada: límite de fidelidad | C5/C6 respaldan Hardware/Software; J5/J6 vacíos. Bosque mínimo de tipos independientes, sin nombres de niveles inventados. Padres/niveles originales adicionales no demostrables; SD-P04 y esa parte de SD-DP01 siguen pendientes de fuente. |
+| D40 | Adoptada: clasificación | ClasificacionCI con código único, padre PROTECT, orden, nivel derivado, estado/procedencia y esquema JSON. Organigrama y SKMS/CMS no se reutilizan como clases. |
+| D41 | Adoptada: atributos | JSON consultable y validado por clase, sin herencia tácita ni IP universal. Cambiar esquema o marca de dispositivo no puede invalidar/redefinir CI existentes silenciosamente. Campos nuevos identificados como extensiones. |
+| D42 | Adoptada: ubicación/responsable | UbicacionCI plana; responsable reutiliza Usuario. Textos de equipo/K6 del Excel requieren mapeo futuro, no inferencia automática. |
+| D43 | Adoptada: relaciones | Tipo configurable con dirección/política de ciclos; CI–CI único por tipo/par, sin autoenlace. No dirigida exige extremos por PK. Semántica congelada con relaciones; se preservan históricos. |
+| D44 | Adoptada: ciclos/grafos | Clasificación acíclica y subgrafo técnico activo de tipos restrictivos acíclico, incluso mezclando tipos. G1/G2 definidos para proyecto; interpretación docente de ambos grafos permanece por confirmar. Sin recorrido público aún. |
+| D45 | Adoptada: integración/persistencia | ServicioCI M:N a N2 existente; DomainModel/lock/PROTECT/bajas/bulk guardas se conservan. Sin Ticket artificial, seed ni generador. Migración solo de esquema. |
+| D46 | Adoptada: evidencia/entorno | Solo check y migraciones ligeras. Docker/repositorio original bloqueados por aislamiento: preparar copia y parche, sin afirmar aplicación original ni migración PostgreSQL aprobada. Dependencias oficiales solo en scratch. Máximo dos commits locales, sin push. |
+
+SD-DP08 queda resuelto para distinguir dispositivo por clasificación explícita;
+distribución y carga siguen pendientes. SD-DP09 adopta guardas actuales para
+esta fase, sin afirmar rendimiento a 5,000. Las decisiones no crean datos fuente.
