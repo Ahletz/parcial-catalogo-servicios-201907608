@@ -1,0 +1,8 @@
+{% extends 'base.html' %}
+{% block title %}FAQ{% endblock %}
+{% block content %}
+<h1>Base de conocimiento (nivel 0 · autoservicio)</h1>
+<form method="get" class="panel actions"><label for="q">Buscar</label><input id="q" name="q" value="{{ q }}"><button type="submit">Buscar</button></form>
+<ul>{% for a in page %}<li><a href="{% url 'sd-faq-detalle' pk=a.pk %}">{{ a.titulo }}</a> · {{ a.categoria }}{% if not a.publicado %} · (no publicado){% endif %}</li>{% empty %}<li>Sin artículos.</li>{% endfor %}</ul>
+{% include 'service_desk/_paginacion.html' %}
+{% endblock %}

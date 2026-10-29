@@ -5,7 +5,7 @@ WORKDIR /app/src
 COPY requirements.txt /app/requirements.txt
 RUN python -m pip install --no-cache-dir --index-url https://pypi.org/simple -r /app/requirements.txt
 RUN useradd --uid 1000 --create-home app
-RUN install -d -o app -g app /app/staticfiles
+RUN install -d -o app -g app /app/staticfiles /app/privado/adjuntos
 COPY src /app/src
 COPY tests /app/tests
 COPY scripts /app/scripts

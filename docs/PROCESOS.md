@@ -304,3 +304,43 @@ capturados al entrar; transferencias y cambios no reescriben metas históricas.
 SD-P17 usará reloj y tickets controlados, incluidos pausa abierta, límites,
 reapertura, transferencia y tickets sin atención/resolución. Nunca publicar
 latencias ni porcentajes de cumplimiento como medidos en esta fase.
+
+## Cierre Service Desk (SD-PE04)
+
+### Interfaces
+
+| Ruta | Uso | Autorización (servidor) |
+|---|---|---|
+| `/service-desk/` | Portal: mis tickets, colas consultables, FAQ destacada | Sesión |
+| `/service-desk/tickets/` | Búsqueda por número, servicio, proceso, cola, estado, prioridad, responsable y fechas; 25 por página, orden prioridad→antigüedad | Solo tickets propios o de colas con CONSULTAR |
+| `/service-desk/tickets/nuevo/` | Alta con CI por código o motivo sin CI y datos de alta del proceso | `puede_crear_tickets` (no CONSULTA) |
+| `/service-desk/tickets/<número>/` | Detalle, historial, comentarios, adjuntos; formularios de tomar, transición, asignar, transferir, reclasificar, CI, relación, E2/E3 | Cada POST revalida en `servicios`; el solicitante no ve notas/adjuntos internos ni la bitácora interna |
+| `/service-desk/colas/`, `/colas/<código>/` | Consola: colas autorizadas, conteos y tickets ordenados con «Tomar» | CONSULTAR/ATENDER |
+| `/service-desk/faq/` | Base de conocimiento nivel 0 con búsqueda | Publicados; admin ve borradores |
+| `/service-desk/tablero/` | Indicadores | Universo = tickets visibles |
+| `/service-desk/administracion/` | CRUD lógico de colas, membresías, roles SD, FAQ, clasificaciones, ubicaciones, CI, tipos y relaciones CI, vínculos CI–servicio (reutiliza mantenimientos PP2) | ADMINISTRADOR |
+| `/cmdb/`, `/cmdb/<código>/`, `/cmdb/<código>/grafo/` | CMDB: filtros por código/nombre, clasificación (incluye hijas), estado, ubicación, responsable y servicio; 50 por página; ficha; grafo 1 | Lectura funcional |
+
+### Reclasificación entre procesos
+
+`servicios.reclasificar_ticket` (TRANSFERIR o ADMINISTRAR): valida tipo/subtipo
+destino, que sea otro proceso y que la cola destino esté activa y pertenezca a
+él; reinicia el flujo en el estado inicial, crea el detalle del nuevo proceso,
+conserva el detalle anterior y registra `ReclasificacionTicket` y acciones
+RECLASIFICAR. Las aprobaciones anteriores dejan de valer (`inicio_ciclo_proceso`).
+No se permite volver a un proceso ya recorrido por el mismo ticket.
+
+### Fórmulas del tablero (`service_desk/indicadores.py`)
+
+Tiempo calendario; corte = instante de consulta.
+
+| Indicador | Fórmula y tratamiento |
+|---|---|
+| Por cola/proceso/prioridad/estado | Conteo de tickets distintos del universo visible. |
+| Antigüedad | Abiertos: corte − creación. Cerrados: cierre − creación (se muestran aparte). |
+| Primera atención | Primera acción de bitácora de alguien distinto del solicitante que no sea administrativa (crear, tomar, asignar, reasignar, liberar, transferir, reclasificar, adjuntar, relacionar, vincular) − creación. Sin atención → «pendiente», nunca cero. |
+| Resolución | `fecha_resolucion` − creación. |
+| Cumplimiento | Resueltos con objetivo de su cola y tiempo ≤ objetivo / resueltos con objetivo; sin elegibles → «sin datos». Abiertos que superaron el objetivo se cuentan como vencidos, no como incumplidos cerrados. Igual para primera atención. |
+| Abiertos / resueltos / cerrados | Abierto = sin `fecha_cierre` (incluye resueltos no cerrados). |
+| Reabiertos | Reabrir limpia `fecha_resolucion`; la siguiente resolución se mide desde la creación original (acumulado), y la bitácora conserva la resolución previa. |
+| Pausados | No existe estado de pausa en el modelo; no se descuentan intervalos (limitación documentada). |

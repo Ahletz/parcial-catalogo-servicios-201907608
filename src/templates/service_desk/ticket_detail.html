@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% block title %}{{ ticket.numero }}{% endblock %}
+{% block content %}
+<div class="heading"><h1>{{ ticket.numero }} · {{ ticket.titulo }}</h1>
+<a href="{% url 'sd-ticket-grafo' numero=ticket.numero %}">Trazabilidad (grafo ITSM)</a></div>
+<dl class="panel detail">
+<dt>Estado</dt><dd><strong>{{ ticket.estado }}</strong>{% if not ticket.abierto %} · cerrado {{ ticket.fecha_cierre|date:"Y-m-d H:i" }}{% endif %}</dd>
+<dt>Proceso / tipo</dt><dd>{{ ticket.get_proceso_display }} · {{ ticket.get_tipo_display }}{% if ticket.subtipo %} ({{ ticket.get_subtipo_display }}){% endif %}</dd>
+<dt>Servicio</dt><dd>{{ ticket.servicio }} · N1 {{ ticket.nivel1 }}</dd>
+<dt>Cola</dt><dd>{{ ticket.cola }} (nivel {{ ticket.cola.nivel_soporte }})</dd>
+<dt>Solicitante / creador</dt><dd>{{ ticket.solicitante }} / {{ ticket.creador }}</dd>
+<dt>Responsable</dt><dd>{{ ticket.responsable|default:"Sin asignar" }}</dd>
+<dt>Prioridad · impacto · urgencia</dt><dd>{{ ticket.get_prioridad_display }} · {{ ticket.get_impacto_display }} · {{ ticket.get_urgencia_display }}</dd>
+<dt>Canal</dt><dd>{{ ticket.get_canal_display }}</dd>
+<dt>Creado / actualizado</dt><dd>{{ ticket.created_at|date:"Y-m-d H:i" }} / {{ ticket.updated_at|date:"Y-m-d H:i" }}</dd>
+<dt>Resolución</dt><dd>{{ ticket.resolucion|default:"—" }} {% if ticket.fecha_resolucion %}({{ ticket.fecha_resolucion|date:"Y-m-d H:i" }}){% endif %}</dd>
+<dt>Descripción</dt><dd>{{ ticket.descripcion|linebreaksbr }}</dd>
+<dt>CI</dt><dd>{% for ci in cis %}<a href="{% url 'cmdb-ci' codigo=ci.codigo %}">{{ ci.codigo }}</a> {% empty %}Sin CI · motivo: {{ ticket.motivo_sin_ci|default:"—" }}{% endfor %}</dd>
+<dt>Relaciones</dt><dd>{% for r in relaciones %}{{ r.get_tipo_display }} → <a href="{% url 'sd-ticket' numero=r.destino.numero %}">{{ r.destino.numero }}</a><br>{% endfor %}{% for r in relaciones_entrantes %}{{ r.get_tipo_display }} ← <a href="{% url 'sd-ticket' numero=r.origen.numero %}">{{ r.origen.numero }}</a><br>{% endfor %}</dd>
+{% for etiqueta, valor in campos_detalle %}<dt>{{ etiqueta|capfirst }}</dt><dd>{{ valor|default_if_none:"—" }}</dd>{% endfor %}
+</dl>
+
+{% if ticket.abierto %}
+<div class="grid2">
+{% if 'ATENDER' in caps and not ticket.responsable_id %}
+<form method="post" class="panel">{% csrf_token %}<input type="hidden" name="operacion" value="tomar"><button type="submit">Tomar ticket</button></form>
+{% endif %}
+{% if acciones %}
+<form method="post" class="panel">{% csrf_token %}<input type="hidden" name="operacion" value="accion">
+<h2>Ejecutar transición</h2>
+<label for="accion">Acción</label><select id="accion" name="accion">{% for t in acciones %}<option value="{{ t.accion }}">{{ t.accion }} → {{ t.destino }}</option>{% endfor %}</select>
+<ul class="muted">{% for t in acciones %}<li>{{ t.accion }}: campos {{ t.campos|join:", "|default:"ninguno" }}{% if t.requiere_motivo %}; motivo obligatorio{% endif %}</li>{% endfor %}</ul>
+{{ formularios.accion.motivo.label_tag }}{{ formularios.accion.motivo }}
+{{ formularios.accion.datos.label_tag }}{{ formularios.accion.datos }}
+<button type="submit">Ejecutar</button></form>
+{% endif %}
+{% if 'TRANSFERIR' in caps or 'ADMINISTRAR' in caps %}
+<form method="post" class="panel">{% csrf_token %}<input type="hidden" name="operacion" value="asignar">
+<h2>Asignar / reasignar</h2><label for="agente">Agente</label><select id="agente" name="agente">{% for a in agentes %}<option value="{{ a.pk }}">{{ a }}</option>{% endfor %}</select>
+<label for="motivo-asig">Motivo (obligatorio al reasignar)</label><input id="motivo-asig" name="motivo"><button type="submit">Asignar</button></form>
+{% endif %}
+{% if 'TRANSFERIR' in caps %}
+<form method="post" class="panel">{% csrf_token %}<input type="hidden" name="operacion" value="transferir"><h2>Transferir (mismo proceso)</h2>{{ formularios.transferencia.as_p }}<button type="submit">Transferir</button></form>
+<form method="post" class="panel">{% csrf_token %}<input type="hidden" name="operacion" value="reclasificar"><h2>Reclasificar a otro proceso</h2>{{ formularios.reclasificacion.as_p }}<button type="submit">Reclasificar</button></form>
+{% endif %}
+{% if 'ATENDER' in caps and internas %}
+<form method="post" class="panel">{% csrf_token %}<input type="hidden" name="operacion" value="ci"><h2>Asociar CI</h2>
+<label for="cis">Códigos de CI</label><input id="cis" name="cis"><label for="obs">Observación</label><input id="obs" name="observacion"><button type="submit">Asociar</button></form>
+<form method="post" class="panel">{% csrf_token %}<input type="hidden" name="operacion" value="relacion"><h2>Relacionar ticket</h2>{{ formularios.relacion.as_p }}<button type="submit">Relacionar</button></form>
+{% if evento_con_incidente %}<form method="post" class="panel">{% csrf_token %}<input type="hidden" name="operacion" value="incidente"><h2>E2/E3: crear o vincular incidente</h2><button type="submit">Crear/vincular (idempotente)</button></form>{% endif %}
+{% endif %}
+</div>
+{% endif %}
+
+<div class="grid2">
+<section class="panel"><h2>Comentarios</h2>
+{% for c in comentarios %}<div class="{% if c.visibilidad == 'INTERNO' %}panel interna{% endif %}"><p class="muted">{{ c.autor }} · {{ c.created_at|date:"Y-m-d H:i" }}{% if c.visibilidad == 'INTERNO' %} · NOTA INTERNA{% endif %}</p><p>{{ c.texto|linebreaksbr }}</p></div>{% empty %}<p>Sin comentarios.</p>{% endfor %}
+{% if puede_comentar and ticket.abierto %}
+<form method="post">{% csrf_token %}<input type="hidden" name="operacion" value="comentario">{{ formularios.comentario.texto }}
+{% if internas %}<label>{{ formularios.comentario.interno }} Nota interna (no visible al solicitante)</label>{% endif %}<button type="submit">Agregar</button></form>{% endif %}
+</section>
+<section class="panel"><h2>Adjuntos</h2>
+<ul>{% for a in adjuntos %}<li><a href="{% url 'sd-adjunto' identificador=a.identificador %}">{{ a.nombre_original }}</a> · {{ a.tamano }} B · {{ a.tipo_mime }}{% if a.visibilidad == 'INTERNO' %} · interno{% endif %}</li>{% empty %}<li>Sin adjuntos.</li>{% endfor %}</ul>
+{% if puede_comentar and ticket.abierto %}
+<form method="post" enctype="multipart/form-data">{% csrf_token %}<input type="hidden" name="operacion" value="adjunto">{{ formularios.adjunto.archivo }}
+{% if internas %}<label>{{ formularios.adjunto.interno }} Solo interno</label>{% endif %}<button type="submit">Adjuntar</button></form>
+<p class="muted">PDF, PNG, JPEG o TXT; máximo 10 MiB.</p>{% endif %}
+</section>
+</div>
+<section class="panel"><h2>Historial</h2>
+<div class="table-wrap"><table><thead><tr><th>Fecha</th><th>Actor</th><th>Acción</th><th>Campo</th><th>Antes</th><th>Después</th><th>Motivo</th></tr></thead>
+<tbody>{% for a in historial %}<tr><td>{{ a.created_at|date:"Y-m-d H:i:s" }}</td><td>{{ a.actor }}</td><td>{{ a.accion }}</td><td>{{ a.campo }}</td><td>{{ a.valor_anterior|default_if_none:"" }}</td><td>{{ a.valor_nuevo|default_if_none:"" }}</td><td>{{ a.motivo }}</td></tr>{% endfor %}</tbody></table></div>
+</section>
+{% endblock %}

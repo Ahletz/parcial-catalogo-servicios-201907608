@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block title %}{{ cola.codigo }}{% endblock %}
+{% block content %}
+<h1>Cola {{ cola.codigo }} · {{ cola.nombre }}</h1>
+<p>{{ cola.get_proceso_display }} · {{ cola.get_nivel_soporte_display }} · objetivo de primera atención {{ cola.objetivo_primera_atencion|default:"sin definir" }} · resolución {{ cola.objetivo_resolucion|default:"sin definir" }}. Orden: prioridad, antigüedad.</p>
+<div class="table-wrap"><table><thead><tr><th>#</th><th>Número</th><th>Título</th><th>Prioridad</th><th>Estado</th><th>Creado</th><th>Responsable</th><th></th></tr></thead>
+<tbody>{% for t in page %}<tr><td>{{ page.start_index|add:forloop.counter0 }}</td><td><a href="{% url 'sd-ticket' numero=t.numero %}">{{ t.numero }}</a></td><td>{{ t.titulo }}</td><td>{{ t.get_prioridad_display }}</td><td>{{ t.estado }}</td><td>{{ t.created_at|date:"Y-m-d H:i" }}</td><td>{{ t.responsable|default:"Sin asignar" }}</td>
+<td>{% if puede_tomar and not t.responsable_id %}<form method="post">{% csrf_token %}<input type="hidden" name="ticket" value="{{ t.pk }}"><button type="submit">Tomar</button></form>{% endif %}</td></tr>
+{% empty %}<tr><td colspan="8">Cola vacía.</td></tr>{% endfor %}</tbody></table></div>
+{% include 'service_desk/_paginacion.html' %}
+{% endblock %}

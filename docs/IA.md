@@ -2,7 +2,10 @@
 
 Fecha: 2026-10-29. **V4 documental; V5 añade modelo CMDB y controles ligeros.** Fuentes T §§1/9/14,
 detalladas en [FUENTES_SERVICE_DESK](FUENTES_SERVICE_DESK.md). No se han ejecutado
-flujos Service Desk ni se han demostrado nuevos ciclos funcionales.
+flujos Service Desk ni se han demostrado nuevos ciclos funcionales. Las tablas y
+planes siguientes son antecedente V4; el estado vigente (código SD-PE04 con
+generador, harness y grafos, aún sin ejecutar) está en
+[Cierre Service Desk](#cierre-service-desk--sd-pe04).
 
 ## Mínimos y estado verificable
 
@@ -131,3 +134,56 @@ rol OPERATIVO, orden de locks y estado de integración CMDB. Evidencia en
 No se acredita ciclo de Loop ni mejora de prompt: no hubo control funcional
 fallido y repetido. La localización tardía de los artefactos CMDB fue una
 corrección de ejecución, registrada en el prompt sin presentarla como mejora.
+
+## Cierre Service Desk — SD-PE04
+
+Prompt [SD-PE04 · cierre/grafos/pruebas/Docker](prompts/SD_P04_CIERRE_GRAFOS_PRUEBAS_DOCKER.md).
+
+### Prompt Engineering: prompts realmente usados
+
+| # | Prompt (archivo) | Tema(s) de T §9 | Herramienta registrada |
+|---|---|---|---|
+| 1 | [P01_ANALISIS](prompts/P01_ANALISIS.md) | requisitos (PP2) | según registro PP2 |
+| 2 | [P02_MODELO](prompts/P02_MODELO.md) | modelo | según registro PP2 |
+| 3 | [P03_IMPORTACION](prompts/P03_IMPORTACION.md) + [revisión](prompts/P03_REVISION_INTEGRIDAD.md) | datos/importación — **mejora 1** | según registro PP2 |
+| 4 | [P04_AUTENTICACION_FUNCIONAL](prompts/P04_AUTENTICACION_FUNCIONAL.md) + [revisión](prompts/P04_REVISION_SESIONES.md) | seguridad — **mejora 2** | según registro PP2 |
+| 5 | [P05_DOCKER_PRUEBAS_CIERRE](prompts/P05_DOCKER_PRUEBAS_CIERRE.md) | pruebas/Docker (PP2) | según registro PP2 |
+| 6 | SD-PE01 (en esta página, arriba) | requisitos Service Desk | Codex desktop (GPT-6, variante no expuesta) |
+| 7 | [SD-PE02](prompts/SD_P02_CMDB.md) | CMDB | Codex desktop (GPT-6, variante no expuesta) |
+| 8 | [SD-PE03](prompts/SD_P03_SERVICE_DESK.md) | modelo, colas, procesos, seguridad | Claude Code, Claude Opus 5.5 |
+| 9 | [SD-PE04](prompts/SD_P04_CIERRE_GRAFOS_PRUEBAS_DOCKER.md) | grafos, pruebas, Docker/harness | Claude Code, Claude Opus 5.5 |
+
+Son nueve prompts registrados (once archivos, contando las dos revisiones) que
+cubren requisitos, CMDB, modelo, colas, procesos, seguridad, grafos y pruebas.
+Las dos mejoras comprobadas son las revisiones PP2 de importación y sesiones
+(instrucción inicial → fallo observado → revisión → mismo control satisfactorio);
+no se declara una tercera mejora en Service Desk.
+
+### Context Engineering: actualizaciones justificadas
+
+| Versión | Hallazgo que la justifica | Commit (recuperable) |
+|---|---|---|
+| [V4](contexto/CONTEXTO_V4.md) | Nueva tarea cambia alcance, fuentes, P01–P18 y roles | `git log -1 --diff-filter=A -- docs/contexto/CONTEXTO_V4.md` → 396aa81 |
+| [V5](contexto/CONTEXTO_V5.md) | CMDB sin taxonomía exhaustiva; modelo mínimo y reglas de ciclos | 2fb2521 |
+| [V6](contexto/CONTEXTO_V6.md) | Rol OPERATIVO, orden de locks, CMDB integrada en el original | 8f9b650 |
+
+SD-PE04 no creó V7: las decisiones nuevas (D57–D62) no cambian invariantes de
+AGENTS más allá de lo que se actualiza en el propio AGENTS.
+
+### Harness Engineering
+
+`scripts/verify.sh` (código 0 = todo aprobado, ≠0 = fallo; trap que detiene el
+proyecto y conserva su volumen): proyecto Compose aislado `catalogo-qa-*`,
+configuración sintética → build/up → integridad de fuentes (hashes) → pip check
+→ `check` → `makemigrations --check` → probe PP2 (importación ×2, demo ×2, HTTP)
+→ probe host → **probe SD** (`generate_cmdb` 5,000 ×2, `seed_service_desk` ×2,
+SD-P03/P16 con tiempos) → **una** suite Django (PP2 + SD-P01–P17) → persistencia
+PP2-P12/SD-P18 → hashes otra vez. Nunca usa `.env`, el proyecto ni el volumen
+de evaluación.
+
+### Graph Engineering
+
+Grafo 1 (CMDB, impacto potencial) y grafo 2 (trazabilidad ITSM) descritos en
+[MODELO](MODELO.md#grafos-implementados): nodos, aristas, dirección, ciclos,
+BFS, profundidad máxima 6 y criterios de corte. La jerarquía de clasificación es
+un tercer grafo (árbol) siempre acíclico. Pruebas: SD-P04, SD-P13, SD-P14.

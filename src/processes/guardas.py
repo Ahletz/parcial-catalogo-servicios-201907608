@@ -34,7 +34,9 @@ def requiere(*campos):
 def aprobacion_vigente(ctx):
     """La última decisión debe aprobar exactamente el contenido actual."""
     Aprobacion = apps.get_model("processes", "Aprobacion")
-    ultima = Aprobacion.objects.filter(ticket_id=ctx.ticket.pk).order_by("-pk").first()
+    ultima = Aprobacion.objects.filter(
+        ticket_id=ctx.ticket.pk, created_at__gte=ctx.ticket.inicio_ciclo_proceso()
+    ).order_by("-pk").first()
     if ultima is None or ultima.decision != Aprobacion.Decision.APROBADA:
         raise ValidationError("Se requiere aprobación previa vigente.")
     if ultima.huella != ctx.detalle.huella():

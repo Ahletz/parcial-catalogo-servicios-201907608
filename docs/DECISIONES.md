@@ -297,3 +297,14 @@ Aprobación (todas las decisiones de proceso): el aprobador no puede ser el
 solicitante ni el creador; en accesos tampoco el beneficiario. La aprobación
 guarda una huella SHA-256 del contenido aprobado (en cambios incluye los CI);
 modificarlo invalida la aprobación para ejecutar/implementar/provisionar.
+
+## Cierre Service Desk — decisiones D57–D62, 2026-10-29 (SD-PE04)
+
+| ID | Estado | Decisión y justificación |
+|---|---|---|
+| D57 | Adoptada: clases sintéticas | El generador necesita clases con atributos propios. Bajo las raíces Hardware/Software (fuente) se crean Servidor, Estación, Red, Almacenamiento, Impresora y Aplicación marcadas `decision_proyecto_D57`; no se presentan como taxonomía docente (D39 sigue vigente). |
+| D58 | Adoptada: idempotencia del generador | Código por semilla+ordinal; registros existentes se conservan sin sobrescribir; relaciones y vínculos por clave natural. Validación completa por registro (≈85 s para 5,000 en el entorno local), sin bulk. |
+| D59 | Adoptada: demo | `seed_service_desk` recorre los flujos con los servicios de aplicación (no escribe estados), 8 colas (dos de incidentes para transferir), 37 tickets demo + 2 incidentes derivados de E2/E3. Nuevos servicios vincula N2 existentes para preservar 12/46. Cuentas SD con `DEMO_SD_PASSWORD`. |
+| D60 | Adoptada: interfaces | Plantillas Django y CSS local; grafos en SVG generado por el servidor (sin JS ni librerías). Administración reutiliza los mantenimientos genéricos PP2. |
+| D61 | Adoptada: indicadores | Tiempo calendario, primera atención por bitácora excluyendo acciones administrativas, sin pausas (no modeladas), cumplimiento solo sobre resueltos con objetivo. |
+| D62 | Adoptada: harness | verify.sh añade probe SD (5,000 CI dos veces, demo dos veces, tiempos P16) y la suite incluye SD-P01–P17; P18 amplía el registro de persistencia a CMDB, tickets e historial. |

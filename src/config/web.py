@@ -72,10 +72,53 @@ for slug, title, model in (
                             (("etiqueta", "Etiqueta"), ("estado", "Estado")))
 
 
+from cmdb.models import CI, ClasificacionCI, RelacionCI, ServicioCI, TipoRelacionCI, UbicacionCI
+from service_desk.models import (
+    ArticuloConocimiento, AsignacionRolSD, ColaServiceDesk, MembresiaCola,
+)
+
+SD_ADMIN = {
+    "colas-sd": entity("Colas de Service Desk", ColaServiceDesk, [
+        "codigo", "nombre", "descripcion", "estado", "proceso", "nivel_soporte",
+        "regla_ordenamiento", "objetivo_primera_atencion", "objetivo_resolucion",
+    ], COMMON + (("proceso", "Proceso"), ("nivel_soporte", "Nivel"))),
+    "membresias-sd": entity("Membresías de cola", MembresiaCola, [
+        "cola", "usuario", "rol", "puede_consultar", "puede_atender", "puede_transferir",
+        "puede_aprobar", "puede_administrar", "activo",
+    ], (("cola", "Cola"), ("usuario", "Usuario"), ("rol", "Rol"),
+        ("puede_atender", "Atender"), ("puede_aprobar", "Aprobar"), ("activo", "Estado"))),
+    "roles-sd": entity("Roles de Service Desk", AsignacionRolSD, ["usuario", "rol", "activo"],
+                       (("usuario", "Usuario"), ("rol", "Rol"), ("activo", "Estado"))),
+    "articulos": entity("Artículos FAQ", ArticuloConocimiento, [
+        "titulo", "categoria", "contenido", "publicado", "servicio",
+    ], (("titulo", "Título"), ("categoria", "Categoría"), ("publicado", "Publicado"))),
+    "clasificaciones-ci": entity("Clasificaciones CMDB", ClasificacionCI, [
+        "codigo", "nombre", "estado", "padre", "orden", "es_dispositivo", "esquema_atributos",
+    ], COMMON + (("padre", "Padre"), ("es_dispositivo", "Dispositivo"))),
+    "ubicaciones-ci": entity("Ubicaciones CMDB", UbicacionCI,
+                             ["codigo", "nombre", "estado", "observaciones"], COMMON),
+    "cis": entity("Elementos de configuración", CI, [
+        "codigo", "nombre", "estado", "clasificacion", "ubicacion", "responsable",
+        "descripcion", "atributos",
+    ], COMMON + (("clasificacion", "Clasificación"), ("ubicacion", "Ubicación"))),
+    "tipos-relacion-ci": entity("Tipos de relación CI", TipoRelacionCI, [
+        "codigo", "nombre", "estado", "dirigida", "permite_ciclos",
+    ], COMMON + (("dirigida", "Dirigida"), ("permite_ciclos", "Ciclos"))),
+    "relaciones-ci": entity("Relaciones CI", RelacionCI, [
+        "tipo", "origen", "destino", "estado", "observaciones",
+    ], (("tipo", "Tipo"), ("origen", "Origen"), ("destino", "Destino"), ("estado", "Estado"))),
+    "servicios-ci": entity("Vínculos CI–servicio", ServicioCI, [
+        "ci", "servicio", "estado", "observaciones",
+    ], (("ci", "CI"), ("servicio", "Servicio"), ("estado", "Estado"))),
+}
+
+
 def configuration(slug):
-    if slug not in ENTITIES:
+    # Registro PP2 y registro SD separados; mismas vistas y guardas.
+    config = ENTITIES.get(slug) or SD_ADMIN.get(slug)
+    if config is None:
         raise Http404("Mantenimiento inexistente.")
-    return ENTITIES[slug]
+    return config
 
 
 def display(obj, name):
@@ -207,3 +250,10 @@ def service_detail(request, pk):
         "title": "Ficha del servicio", "service": service,
         "attributes": [(label, display(service, name)) for name, label in attributes],
     })
+
+
+@functional_access(write=True)
+@require_safe
+def service_desk_admin(request):
+    return render(request, "index.html", {"title": "Administración Service Desk y CMDB",
+        "entities": [(slug, config.title) for slug, config in SD_ADMIN.items()]})

@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block title %}Service Desk{% endblock %}
+{% block content %}
+<div class="heading"><h1>Service Desk</h1>
+{% if puede_crear %}<a class="button" href="{% url 'sd-ticket-nuevo' %}">Registrar ticket</a>{% endif %}</div>
+<form method="get" action="{% url 'sd-faq' %}" class="panel actions"><label for="q">¿Buscas una solución? (FAQ, nivel 0)</label>
+<input id="q" name="q" placeholder="Buscar en la base de conocimiento"><button type="submit">Buscar</button></form>
+<div class="grid2">
+<section class="panel"><h2>Mis tickets</h2>
+<ul>{% for t in propios %}<li><a href="{% url 'sd-ticket' numero=t.numero %}">{{ t.numero }}</a> · {{ t.titulo }} · <strong>{{ t.estado }}</strong></li>{% empty %}<li>No tienes tickets.</li>{% endfor %}</ul>
+<a href="{% url 'sd-tickets' %}">Ver y buscar todos</a></section>
+<section class="panel"><h2>Colas que puedes consultar</h2>
+<ul>{% for c in colas %}<li><a href="{% url 'sd-cola' codigo=c.codigo %}">{{ c.codigo }}</a> · {{ c.get_proceso_display }}</li>{% empty %}<li>Sin colas asignadas.</li>{% endfor %}</ul></section>
+<section class="panel"><h2>Artículos destacados</h2>
+<ul>{% for a in articulos %}<li><a href="{% url 'sd-faq-detalle' pk=a.pk %}">{{ a.titulo }}</a></li>{% empty %}<li>Sin artículos publicados.</li>{% endfor %}</ul></section>
+</div>
+{% endblock %}

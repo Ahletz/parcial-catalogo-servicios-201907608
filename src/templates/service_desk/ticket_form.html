@@ -1,0 +1,8 @@
+{% extends 'base.html' %}
+{% block title %}Registrar ticket{% endblock %}
+{% block content %}
+<h1>Registrar ticket</h1>
+<p class="muted">Tipos y procesos: requisición + «Nuevo servicio» → Nuevos servicios; requisición + «Servicio existente» → Servicios de tecnología. Asocia CI por código o justifica su ausencia. Completa los campos específicos del proceso que corresponda.</p>
+<form method="post" class="panel editor">{% csrf_token %}{{ form.as_p }}
+<div class="actions"><button type="submit">Registrar</button><a href="{% url 'sd-portal' %}">Cancelar</a></div></form>
+{% endblock %}

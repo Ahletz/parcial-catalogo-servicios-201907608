@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block title %}{{ ci.codigo }}{% endblock %}
+{% block content %}
+<div class="heading"><h1>{{ ci.codigo }} · {{ ci.nombre }}</h1><a href="{% url 'cmdb-grafo' codigo=ci.codigo %}">Ver grafo de impacto</a></div>
+<dl class="panel detail">
+<dt>Clasificación</dt><dd>{% for n in ruta %}{{ n.nombre }}{% if not forloop.last %} → {% endif %}{% endfor %} (nivel {{ ci.clasificacion.nivel }}; dispositivo: {{ ci.clasificacion.es_dispositivo|yesno:"sí,no" }})</dd>
+<dt>Estado</dt><dd>{{ ci.estado|yesno:"Activo,Inactivo" }}</dd>
+<dt>Ubicación</dt><dd>{{ ci.ubicacion }}</dd><dt>Responsable</dt><dd>{{ ci.responsable }}</dd>
+<dt>Descripción</dt><dd>{{ ci.descripcion|default:"—" }}</dd>
+{% for k, v in ci.atributos.items %}<dt>{{ k }}</dt><dd>{{ v }}</dd>{% endfor %}
+<dt>Procedencia</dt><dd>{{ ci.datos_origen }}</dd>
+</dl>
+<div class="grid2">
+<section class="panel"><h2>Relaciones</h2><ul>
+{% for r in salientes %}<li>{{ r.tipo.nombre }} → <a href="{% url 'cmdb-ci' codigo=r.destino.codigo %}">{{ r.destino.codigo }}</a></li>{% endfor %}
+{% for r in entrantes %}<li><a href="{% url 'cmdb-ci' codigo=r.origen.codigo %}">{{ r.origen.codigo }}</a> {{ r.tipo.nombre|lower }} este CI</li>{% endfor %}</ul></section>
+<section class="panel"><h2>Servicios</h2><ul>{% for v in servicios %}<li>{{ v.servicio }}</li>{% empty %}<li>Ninguno.</li>{% endfor %}</ul>
+<h2>Tickets</h2><ul>{% for t in tickets %}<li>{{ t.numero }} · {{ t.estado }}</li>{% empty %}<li>Ninguno.</li>{% endfor %}</ul></section>
+</div>
+{% endblock %}

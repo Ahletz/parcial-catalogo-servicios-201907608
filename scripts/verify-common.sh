@@ -13,6 +13,7 @@ export DB_PASSWORD=PublicaSinteticaQA2026
 export DEMO_ADMIN_IDENTIFICADOR=admin.demo DEMO_CONSULTA_IDENTIFICADOR=consulta.demo
 export DEMO_ADMIN_PASSWORD=PublicaAdminDemoQA2026
 export DEMO_CONSULTA_PASSWORD=PublicaConsultaDemoQA2026
+export DEMO_SD_PASSWORD=PublicaServiceDeskQA2026
 export DJANGO_DEBUG=false DJANGO_SECURE_COOKIES=false
 export DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1
 export APP_PORT=18000

@@ -22,7 +22,11 @@ x-app: &app
     DEMO_ADMIN_PASSWORD: ${DEMO_ADMIN_PASSWORD:-Evaluacion-Admin-Demo-2026}
     DEMO_CONSULTA_IDENTIFICADOR: ${DEMO_CONSULTA_IDENTIFICADOR:-consulta.demo}
     DEMO_CONSULTA_PASSWORD: ${DEMO_CONSULTA_PASSWORD:-Evaluacion-Consulta-Demo-2026}
+    # Cuentas Service Desk demo (solicitante/agente/aprobador); solo evaluación.
+    DEMO_SD_PASSWORD: ${DEMO_SD_PASSWORD:-Evaluacion-ServiceDesk-Demo-2026}
+    SD_ADJUNTOS_DIR: /app/privado/adjuntos
   volumes:
+    - adjuntos:/app/privado/adjuntos
     - ./ENUNCIADO.md:/fuentes/ENUNCIADO.md:ro
     - ./data/CatalogoServicios.xlsx:/fuentes/CatalogoServicios.xlsx:ro
     - ./data/CatalogoServicios.xlsx:/app/data/CatalogoServicios.xlsx:ro
@@ -89,3 +93,4 @@ networks:
     driver: bridge
 volumes:
   datos_postgres:
+  adjuntos:

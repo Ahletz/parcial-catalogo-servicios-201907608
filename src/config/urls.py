@@ -19,4 +19,6 @@ urlpatterns = [
     path("datos/<slug:entity>/<int:pk>/desactivar/", web.deactivate, name="entity-deactivate"),
     path("servicios/<int:pk>/", web.service_detail, name="service-detail"),
     path("service-desk/", include("service_desk.urls")),
+    path("service-desk/administracion/", web.service_desk_admin, name="sd-admin"),
+    path("cmdb/", include("cmdb.urls")),
 ]

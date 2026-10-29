@@ -1,7 +1,8 @@
 # Modelo de Service Desk y transcripción CMDB
 
-Fecha: 2026-10-29. **V6: CMDB integrada y núcleo SD implementado (sección
-final); conocimiento, indicadores y generación siguen propuestos.** El esquema
+Fecha: 2026-10-29. **V6: CMDB integrada y núcleo SD implementado; SD-PE04 añade
+FAQ, indicadores, generador y grafos (secciones finales), pendientes de
+verificación funcional.** Las secciones «propuesto/previsto» son antecedente V4. El esquema
 implementado del parcial se conserva en [MODELO_DATOS](MODELO_DATOS.md).
 Requisitos: [SERVICE_DESK](SERVICE_DESK.md); fuentes: [inventario](FUENTES_SERVICE_DESK.md).
 
@@ -157,7 +158,8 @@ Un conjunto visitado evita bucles; alcance/profundidad y permisos limitan cada
 recorrido. La vista navega por vecindarios paginados, no dibuja 5,000 nodos de
 golpe. Se propone almacenar nodos/aristas en PostgreSQL con FK, sin exigir otro
 motor. Grafo de flujos de trabajo adicional en PROCESOS; confirmar con docente
-la expresión «ambos grafos» (SD-DP02). No hay grafo ejecutable implementado.
+la expresión «ambos grafos» (SD-DP02). Implementación vigente en
+[Grafos implementados](#grafos-implementados).
 
 ## CMDB persistente: contrato de la implementación de esta fase
 
@@ -288,3 +290,56 @@ erDiagram
 | DetalleServicioTecnologia | Resultado de validación, detalle de cumplimiento. |
 
 Procesos, permisos y flujos: [PROCESOS](PROCESOS.md#implementación-vigente-v6).
+
+## Cierre Service Desk (SD-PE04)
+
+Migración `service_desk.0002`: `ReclasificacionTicket` (anexable: proceso, tipo,
+subtipo, estado y cola anterior/nuevo, actor, motivo obligatorio, fecha; CHECK
+proceso distinto) y `ArticuloConocimiento` (FAQ nivel 0: título, contenido,
+categoría, `publicado` como baja lógica, servicio opcional, fechas). Membresías
+y roles SD tienen ahora baja lógica (`activo`). Adjuntos se guardan en el
+volumen Docker `adjuntos` (`/app/privado/adjuntos`), nunca servido como estático.
+
+### Clasificación CMDB usada por el generador (D57)
+
+```mermaid
+flowchart TD
+  HW["HW · Hardware (CMDB!C5, dispositivo)"] --> SRV["HW-SRV Servidor"]
+  HW --> EST["HW-EST Estación de trabajo"]
+  HW --> RED["HW-RED Equipo de red"]
+  HW --> ALM["HW-ALM Almacenamiento"]
+  HW --> IMP["HW-IMP Impresora"]
+  SW["SW · Software (CMDB!C6, no dispositivo)"] --> APP["SW-APP Aplicación"]
+```
+
+Raíces con respaldo de fuente (`datos_origen` = CMDB.xlsx C5:C6). Nivel 2 =
+clases del **conjunto sintético** (`datos_origen.fuente = decision_proyecto_D57`),
+no taxonomía docente: las fuentes no enumeran más niveles (D39). Cada clase
+declara su `esquema_atributos`; por ejemplo Servidor exige `cpu_nucleos`,
+`memoria_gb`, `sistema_operativo` e IP opcional; Equipo de red exige IP;
+Almacenamiento no tiene IP. Ubicaciones sintéticas `UB-CPD`, `UB-ALT`,
+`UB-OF1..3`; tipos de relación `DEPENDE_DE` y `ALOJADO_EN` (dirigidos,
+acíclicos) y `CONECTADO_A` (no dirigido, admite ciclos).
+
+### Generador `generate_cmdb --count 5000 --seed 2026`
+
+- Código estable `CI-<seed>-<ordinal>`; clase y atributos de
+  `random.Random("<seed>:<ordinal>")`, por lo que cada ordinal es reproducible.
+- Responsables: usuarios activos no CONSULTA existentes; servicios: N2 activos.
+- 50 aplicaciones (software, no cuentan como dispositivos), ~510 relaciones
+  (apps alojadas en servidores, servidores dependientes de red/almacenamiento,
+  anillo `CONECTADO_A` entre equipos de red) y 100 vínculos CI–servicio.
+- Idempotencia: los códigos existentes se conservan sin modificar (respeta
+  cambios humanos); relaciones/vínculos existentes no se repiten.
+- Todo pasa por `save()`/`full_clean` bajo el lock del dominio; sin bulk ni SQL.
+
+### Grafos implementados
+
+| Grafo | Nodos / aristas | Dirección y ciclos | Algoritmo y corte |
+|---|---|---|---|
+| 1 · CMDB (`cmdb/grafos.py::impacto`) | CI / `RelacionCI` activas; `ServicioCI` para servicios | Impacto recorre aristas dirigidas **entrantes** (si B falla, A que depende de B queda potencialmente afectado). `CONECTADO_A` se muestra pero no propaga. Tipos acíclicos validados al guardar; clasificación siempre acíclica | BFS con visitados; profundidad 1–6 (defecto 3); tope 200 nodos con indicador «cortado» |
+| 2 · Trazabilidad ITSM (`service_desk/grafos.py::cadena`) | Ticket / `RelacionTicket` (EVENTO_INCIDENTE, INCIDENTE_PROBLEMA, PROBLEMA_CAMBIO, RELACIONADO) | Aristas dirigidas origen→destino; el recorrido las sigue en ambos sentidos para reconstruir la cadena; tipos validan procesos de los extremos | BFS con visitados; profundidad 1–6 (defecto 4); nodos no visibles para el usuario se omiten y se cuentan como ocultos |
+
+Visualización: SVG generado en servidor por columnas (distancia o proceso),
+con nodos enlazados para navegar; sin JavaScript ni librerías. «Potencialmente
+afectado» nunca se presenta como interrupción confirmada.

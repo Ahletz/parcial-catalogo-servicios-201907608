@@ -1,28 +1,56 @@
 # Catálogo de servicios — Software Avanzado
 
-## Ampliación Service Desk: contexto V5 (2026-10-29)
+## Service Desk (tarea final, 2026-10-29)
 
-Se conserva la base PP2. La fase V5 añade el modelo persistente CMDB y su
-migración en una copia aislada (limitación del entorno documentada), sin UI,
-generador, importación CMDB ni tickets. No se ejecutaron pruebas funcionales;
-solo controles ligeros. Contexto vigente en [AGENTS](AGENTS.md) y
-[V5](docs/contexto/CONTEXTO_V5.md); [V4](docs/contexto/CONTEXTO_V4.md) es antecedente.
+Sobre la base del parcial (catálogo 12 N1/46 N2, organización, autenticación,
+importación) se añadieron CMDB con ≥5,000 dispositivos sintéticos, tickets,
+colas, permisos, siete procesos ITSM, portal, consola, FAQ, tablero y dos grafos.
+Contexto vigente: [AGENTS](AGENTS.md) y [V6](docs/contexto/CONTEXTO_V6.md).
 
-| Documento de la ampliación | Contenido / estado |
+| Entregable (T §12) | Documento |
 |---|---|
-| [SERVICE_DESK](docs/SERVICE_DESK.md) | Requisitos SD-R01–39, brechas, módulos/estructura y decisiones pendientes. |
-| [FUENTES_SERVICE_DESK](docs/FUENTES_SERVICE_DESK.md) | Originales, hashes, páginas/celdas y discrepancias. |
-| [MODELO](docs/MODELO.md) | ER/diccionario propuestos, transcripción de CMDB y grafos. |
-| [PROCESOS](docs/PROCESOS.md) | Siete flujos, tipos, colas, permisos, eventos/incidentes e indicadores previstos. |
-| [IA](docs/IA.md) | Cinco ingenierías, prompt real de análisis y evidencia futura pendiente. |
-| [PRUEBAS](docs/PRUEBAS.md) | Matriz requisito→módulo→implementación→prueba y SD-P01–SD-P18, no ejecutadas. |
+| Alcance, arquitectura, decisiones, limitaciones | [RESOLUCION](docs/RESOLUCION.md#service-desk) |
+| ER, diccionario, jerarquía CMDB, mapeo, grafos | [MODELO](docs/MODELO.md) |
+| Tipos, colas, permisos, estados, transiciones, aprobaciones, escalamiento, indicadores | [PROCESOS](docs/PROCESOS.md) |
+| Prompts, contexto, harness, ciclos, grafos | [IA](docs/IA.md) y [prompts](docs/prompts/) |
+| Matriz requisito → implementación → prueba → evidencia y resultados | [PRUEBAS](docs/PRUEBAS.md), [FASE_CIERRE_SD](docs/evidencias/FASE_CIERRE_SD.md) |
+| Auditoría de rúbrica | [AUDITORIA_RUBRICA](docs/AUDITORIA_RUBRICA.md) |
 
-Se conserva la nomenclatura PP2-P01–P12 para los escenarios antiguos; SD-P01–P18
-son escenarios distintos. La taxonomía original de dispositivos no está
-enumerada en las fuentes disponibles: pendiente SD-DP01, sin clasificación
-inventada. No existen comandos nuevos de generación CMDB ni harness SD.
-Los comandos y resultados del resto de este README corresponden al parcial.
-La aplicación futura debe preservar esos contratos.
+### Desde un clon limpio
+
+~~~bash
+git clone https://github.com/Ahletz/parcial-catalogo-servicios-201907608.git
+cd parcial-catalogo-servicios-201907608
+docker compose up --build -d          # db + migraciones (init) + web
+docker compose exec -T web python manage.py import_catalog --file /app/data/CatalogoServicios.xlsx
+docker compose exec -T web python manage.py seed_demo
+docker compose exec -T web python manage.py generate_cmdb --count 5000 --seed 2026
+docker compose exec -T web python manage.py seed_service_desk
+~~~
+
+URL: **http://localhost:8000/login/** (puerto `APP_PORT`, por defecto 8000).
+Los cuatro comandos son idempotentes: repetirlos no duplica catálogo, CI ni
+tickets. `generate_cmdb` tarda del orden de minuto y medio la primera vez
+(validación completa por registro). El orden importa: el generador usa los
+usuarios de `seed_demo` y los servicios importados; la demo usa los CI.
+
+Cuentas demo (solo evaluación; defaults públicos de compose.yaml, cambiables por .env):
+
+| Usuario | Contraseña por defecto | Rol / capacidades |
+|---|---|---|
+| admin.demo | Evaluacion-Admin-Demo-2026 | ADMINISTRADOR: catálogo, organización, administración SD/CMDB |
+| consulta.demo | Evaluacion-Consulta-Demo-2026 | CONSULTA: solo lectura (tiene una membresía de atención en INC-N1 que **no** le da escritura) |
+| solicitante.demo | Evaluacion-ServiceDesk-Demo-2026 | OPERATIVO + SOLICITANTE: portal |
+| agente.demo | Evaluacion-ServiceDesk-Demo-2026 | OPERATIVO + AGENTE: atender/transferir en las colas excepto INC-N2 |
+| agente2.demo | Evaluacion-ServiceDesk-Demo-2026 | OPERATIVO, membresía directa de atención en INC-N2 |
+| aprobador.demo | Evaluacion-ServiceDesk-Demo-2026 | OPERATIVO + APROBADOR + SOLICITANTE: aprueba NS/CAM/ACC |
+
+Adjuntos: volumen `adjuntos` (`/app/privado/adjuntos`), máx. 10 MiB,
+PDF/PNG/JPEG/TXT; se descargan solo por la vista autorizada.
+
+Pruebas: `bash scripts/verify.sh` (ver sección «Pruebas y harness final»).
+Logs/apagado/reinicio: sección «Logs, apagado, reinicio y recuperación»;
+`docker compose down` **sin -v** conserva `datos_postgres` y `adjuntos`.
 
 Proyecto individual: parcial-catalogo-servicios-201907608. Carné: **201907608**.
 Autor: **Aheltz** (nombre configurado en Git; nombre completo PENDIENTE DE CONFIRMAR).
@@ -118,7 +146,9 @@ bash scripts/verify.sh
 Rutina única: configuración pública sintética, proyecto catalogo-qa-TIMESTAMP-PID,
 volumen independiente, PostgreSQL autenticado, migraciones, fuentes, pip check,
 Django check, comprobación de migraciones, dos importaciones/demo, HTTP real,
-UNA suite completa de 165 tests y P12. Publica temporalmente localhost:18000;
+generate_cmdb 5,000 ×2 y seed_service_desk ×2 con tiempos SD-P16
+(scripts/probe_service_desk.py), UNA suite completa (regresiones PP2 +
+SD-P01–P17) y persistencia P12/SD-P18. Publica temporalmente localhost:18000;
 dejar ese puerto libre. Devuelve 0 solo si todo pasa; un fallo retorna distinto
 de 0 y no se presenta como aprobación. Detiene contenedores al terminar y
 conserva su volumen/base. Nunca lee .env real ni opera el volumen de evaluación.

@@ -290,3 +290,39 @@ un puerto publicado. La decisión humana solicitada es preservar datos/evidencia
 no corregir etiquetas arbitrariamente ni eliminar pruebas. Cada conclusión de
 aceptación depende de controles ejecutados. Nombre/modelo exactos y acceso GitHub
 se dejan verificables por el usuario en lugar de inventarlos para cerrar la nota.
+
+## Service Desk
+
+Ampliación de la tarea final (Tarea_Service_Desk.pdf) sobre el mismo monolito.
+
+**Alcance entregado.** CMDB (clasificación acíclica, ubicaciones, CI con
+atributos por clase, relaciones tipadas, vínculos con N2) y generador
+reproducible de ≥5,000 dispositivos; Ticket con N1 derivado, CI 0..n con
+justificación, relaciones entre tickets, bitácora inmutable, comentarios y notas
+internas, adjuntos privados; colas de un proceso con membresías por usuario o rol
+y cinco capacidades; tomar/asignar/transferir/reclasificar con control
+concurrente; motor común con siete definiciones de proceso distintas,
+aprobaciones con huella, E0–E3 idempotentes, I0–I6 con regla complementaria,
+niveles 0–4; portal, consola, administración, FAQ, tablero y dos grafos.
+
+**Arquitectura.** Apps `cmdb`, `processes` (vocabulario, motor, definiciones,
+detalles y aprobaciones) y `service_desk` (modelos, permisos, servicios
+transaccionales, vistas, indicadores, grafo ITSM). Toda escritura pasa por
+`DomainModel.save()` (full_clean + lock advisory global); las operaciones de
+ticket toman ese lock y después `select_for_update`. Las vistas solo traducen
+formularios: permisos y reglas se aplican en servidor en `servicios`/`permisos`.
+
+**Decisiones clave.** D47–D62 en [DECISIONES](DECISIONES.md): rol global
+OPERATIVO y roles SD aditivos; CONSULTA recortada a lectura; transferencia solo
+dentro del proceso y reclasificación explícita; bandas I0–I6 solo como
+sugerencia; clases sintéticas del generador separadas de la fuente; tiempo
+calendario sin pausas.
+
+**Limitaciones.** La taxonomía docente de dispositivos no existe en las fuentes
+(solo Hardware/Software); no hay pausas ni calendario laboral en indicadores; no
+hay escalamiento automático entre colas por nivel (el escalamiento de incidentes
+registra nivel y motivo, y la transferencia mueve de cola); notificaciones solo
+internas (sin correo); interfaz funcional mínima sin pruebas de navegador.
+
+Resultados y evidencia: [PRUEBAS](PRUEBAS.md) y
+[FASE_CIERRE_SD](evidencias/FASE_CIERRE_SD.md).

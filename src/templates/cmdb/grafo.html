@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block title %}Grafo {{ g.raiz.codigo }}{% endblock %}
+{% block content %}
+<h1>Grafo CMDB · impacto potencial de {{ g.raiz.codigo }}</h1>
+<p class="muted">Columna = distancia al CI raíz siguiendo aristas dirigidas entrantes (quién depende de él). «Potencialmente afectado» no implica interrupción. Profundidad {{ g.profundidad }}{% if g.cortado %} · resultado cortado al tope de nodos{% endif %}.</p>
+<form method="get" class="actions"><label for="p">Profundidad (1–6)</label><input id="p" name="profundidad" value="{{ g.profundidad }}" style="width:5rem"><button type="submit">Recalcular</button></form>
+<div class="grafo"><svg viewBox="0 0 {{ ancho }} {{ alto }}" role="img" aria-label="Grafo de dependencias">
+{% for x1, y1, x2, y2, tipo in svg_lineas %}<line x1="{{ x1 }}" y1="{{ y1 }}" x2="{{ x2 }}" y2="{{ y2 }}" stroke="#95a9bc"><title>{{ tipo }}</title></line>{% endfor %}
+{% for ci, nivel, x, y in svg_nodos %}<a href="{% url 'cmdb-grafo' codigo=ci.codigo %}"><circle cx="{{ x }}" cy="{{ y }}" r="7" fill="{% if nivel == 0 %}#b5651d{% else %}#135c93{% endif %}"></circle><text x="{{ x|add:10 }}" y="{{ y|add:4 }}">{{ ci.codigo }} ({{ ci.clasificacion.nombre }})</text></a>{% endfor %}
+</svg></div>
+<div class="grid2">
+<section class="panel"><h2>Dependencias directas de {{ g.raiz.codigo }}</h2><ul>{% for r in g.dependencias %}<li>{{ r.tipo.nombre }} → <a href="{% url 'cmdb-grafo' codigo=r.destino.codigo %}">{{ r.destino.codigo }}</a></li>{% empty %}<li>Ninguna.</li>{% endfor %}</ul>
+<h3>Conectados (no propagan impacto)</h3><ul>{% for c in g.conectados %}<li><a href="{% url 'cmdb-grafo' codigo=c.codigo %}">{{ c.codigo }}</a></li>{% empty %}<li>Ninguno.</li>{% endfor %}</ul></section>
+<section class="panel"><h2>Servicios potencialmente afectados</h2><ul>{% for s, n in g.servicios %}<li>{{ s }} · {{ n }} CI en el recorrido</li>{% empty %}<li>Ninguno vinculado.</li>{% endfor %}</ul></section>
+</div>
+<p><a href="{% url 'cmdb-ci' codigo=g.raiz.codigo %}">Ficha del CI</a></p>
+{% endblock %}

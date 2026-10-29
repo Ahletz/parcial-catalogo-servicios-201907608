@@ -23,6 +23,13 @@
     <a href="{% url 'organization' %}">Organización</a>
     <a href="{% url 'entity-list' entity='usuarios' %}">Usuarios</a>
     <a href="{% url 'classifications' %}">Clasificaciones</a>
+    <a href="{% url 'sd-portal' %}">Service Desk</a>
+    <a href="{% url 'sd-tickets' %}">Tickets</a>
+    <a href="{% url 'sd-colas' %}">Colas</a>
+    <a href="{% url 'cmdb-lista' %}">CMDB</a>
+    <a href="{% url 'sd-faq' %}">FAQ</a>
+    <a href="{% url 'sd-tablero' %}">Tablero</a>
+    {% if user.rol == 'ADMINISTRADOR' %}<a href="{% url 'sd-admin' %}">Admin SD</a>{% endif %}
   </nav>
   {% endif %}
   <main>

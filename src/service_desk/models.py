@@ -68,6 +68,7 @@ class AsignacionRolSD(DomainModel):
     )
     rol = models.CharField(max_length=11, choices=RolServiceDesk.choices)
     activo = models.BooleanField(default=True)
+    state_field = "activo"
 
     class Meta:
         ordering = ["usuario_id", "rol"]
@@ -107,6 +108,7 @@ class MembresiaCola(DomainModel):
     puede_aprobar = models.BooleanField(default=False)
     puede_administrar = models.BooleanField(default=False)
     activo = models.BooleanField(default=True)
+    state_field = "activo"
 
     class Meta:
         ordering = ["cola_id", "pk"]
@@ -258,9 +260,15 @@ class Ticket(DomainModel):
                 self.validate_active_reference(campo)
         else:
             cambiados = [n for n in self.INMUTABLES if previous[n] != getattr(self, n)]
+            reclasifica = getattr(self, "_reclasificacion", False)
+            if reclasifica:
+                cambiados = [n for n in cambiados if n not in {"tipo", "subtipo", "proceso"}]
             if cambiados:
                 raise ValidationError(f"Campos inmutables tras el alta: {', '.join(cambiados)}.")
-            if previous["estado"] != self.estado:
+            if reclasifica:
+                if self.estado != definicion.estado_inicial:
+                    raise ValidationError({"estado": "La reclasificación reinicia el flujo."})
+            elif previous["estado"] != self.estado:
                 if not definicion.es_transicion(previous["estado"], self.estado):
                     raise ValidationError({"estado": "Transición no definida en el proceso."})
                 if self.estado in definicion.estados_con_aprobacion:
@@ -281,10 +289,17 @@ class Ticket(DomainModel):
         if (self.estado in definicion.finales) != (self.fecha_cierre is not None):
             raise ValidationError({"fecha_cierre": "Solo los estados finales tienen cierre."})
 
+    def inicio_ciclo_proceso(self):
+        """Las aprobaciones de un proceso anterior no valen tras reclasificar."""
+        ultima = ReclasificacionTicket.objects.filter(ticket_id=self.pk).order_by("-pk").first()
+        return ultima.created_at if ultima else self.created_at
+
     def _exigir_aprobacion(self):
         from processes.models import Aprobacion
 
-        ultima = Aprobacion.objects.filter(ticket_id=self.pk).order_by("-pk").first()
+        ultima = Aprobacion.objects.filter(
+            ticket_id=self.pk, created_at__gte=self.inicio_ciclo_proceso()
+        ).order_by("-pk").first()
         if ultima is None or ultima.decision != Aprobacion.Decision.APROBADA:
             raise ValidationError({"estado": "El estado exige aprobación previa vigente."})
 
@@ -468,3 +483,52 @@ class Notificacion(AppendOnlyModel):
         constraints = [
             models.UniqueConstraint(fields=["evento", "incidente"], name="aviso_evento_uniq"),
         ]
+
+
+class ReclasificacionTicket(AppendOnlyModel):
+    """Cambio explícito de proceso/tipo; la transferencia nunca lo hace."""
+
+    ticket = models.ForeignKey(Ticket, on_delete=models.PROTECT, related_name="reclasificaciones")
+    proceso_anterior = models.CharField(max_length=20, choices=Proceso.choices)
+    proceso_nuevo = models.CharField(max_length=20, choices=Proceso.choices)
+    tipo_anterior = models.CharField(max_length=20, choices=TipoTicket.choices)
+    tipo_nuevo = models.CharField(max_length=20, choices=TipoTicket.choices)
+    subtipo_anterior = models.CharField(max_length=18, blank=True)
+    subtipo_nuevo = models.CharField(max_length=18, blank=True)
+    estado_anterior = models.CharField(max_length=32)
+    estado_nuevo = models.CharField(max_length=32)
+    cola_anterior = models.ForeignKey(ColaServiceDesk, on_delete=models.PROTECT, related_name="+")
+    cola_nueva = models.ForeignKey(ColaServiceDesk, on_delete=models.PROTECT, related_name="+")
+    actor = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="+")
+    motivo = models.TextField()
+
+    class Meta:
+        ordering = ["pk"]
+        constraints = [
+            models.CheckConstraint(condition=~Q(motivo=""), name="reclasificacion_con_motivo"),
+            models.CheckConstraint(
+                condition=~Q(proceso_anterior=F("proceso_nuevo")),
+                name="reclasificacion_cambia_proceso",
+            ),
+        ]
+
+
+class ArticuloConocimiento(DomainModel):
+    """FAQ de nivel 0 (autoservicio); solo los publicados son visibles a todos."""
+
+    titulo = models.CharField(max_length=200)
+    contenido = models.TextField()
+    categoria = models.CharField(max_length=100)
+    publicado = models.BooleanField(default=False)
+    servicio = models.ForeignKey(
+        "catalog.ServicioNivel2", on_delete=models.PROTECT, null=True, blank=True,
+        related_name="articulos",
+    )
+    state_field = "publicado"  # Baja lógica = despublicar.
+
+    class Meta:
+        ordering = ["categoria", "titulo"]
+        verbose_name = "artículo de conocimiento"
+
+    def __str__(self):
+        return self.titulo

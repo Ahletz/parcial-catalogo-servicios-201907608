@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block title %}Trazabilidad {{ g.raiz.numero }}{% endblock %}
+{% block content %}
+<h1>Grafo ITSM · trazabilidad de {{ g.raiz.numero }}</h1>
+<p class="muted">Columnas: evento → incidente → problema → cambio. Aristas = relaciones entre tickets. {% if g.ocultos %}{{ g.ocultos }} ticket(s) relacionados no visibles para tu usuario.{% endif %}</p>
+<div class="grafo"><svg viewBox="0 0 {{ ancho }} {{ alto }}" role="img" aria-label="Cadena de tickets">
+{% for x1, y1, x2, y2, tipo in svg_lineas %}<line x1="{{ x1 }}" y1="{{ y1 }}" x2="{{ x2 }}" y2="{{ y2 }}" stroke="#95a9bc"><title>{{ tipo }}</title></line>{% endfor %}
+{% for t, x, y in svg_nodos %}<a href="{% url 'sd-ticket-grafo' numero=t.numero %}"><circle cx="{{ x }}" cy="{{ y }}" r="7" fill="{% if t.pk == g.raiz.pk %}#b5651d{% else %}#135c93{% endif %}"></circle><text x="{{ x|add:10 }}" y="{{ y|add:4 }}">{{ t.numero }} {{ t.get_proceso_display }} · {{ t.estado }}</text></a>{% endfor %}
+</svg></div>
+<section class="panel"><h2>Cadena</h2><ol>{% for t in g.nodos %}<li><a href="{% url 'sd-ticket' numero=t.numero %}">{{ t.numero }}</a> · {{ t.get_proceso_display }} · {{ t.titulo }} · {{ t.estado }}</li>{% endfor %}</ol>
+<ul class="muted">{% for o, d, tipo in g.aristas %}<li>{{ tipo }}: {{ o }} → {{ d }}</li>{% endfor %}</ul></section>
+{% endblock %}

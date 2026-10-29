@@ -14,9 +14,15 @@ y hasta dos commits locales. Sin push/tag, sin suite completa ni SD-P01–P18.
 Implementado sin verificación funcional: `src/service_desk` (Ticket, colas,
 membresías, roles SD, bitácora, comentarios, adjuntos, transferencias, avisos,
 servicios y vista de descarga) y `src/processes` (vocabulario, motor, siete
-definiciones, aprobaciones y detalles). No existen todavía portal, consola,
-FAQ, tablero, indicadores, demo SD, generador de 5,000 CI ni volumen Docker
-de adjuntos. Una fase nueva debe confirmar su propia autorización.
+definiciones, aprobaciones y detalles). SD-PE04 (prompt
+[SD_P04](docs/prompts/SD_P04_CIERRE_GRAFOS_PRUEBAS_DOCKER.md)) añadió, también
+sin ejecutar: portal solicitante, consola de agente (detalle/colas), FAQ
+(`ArticuloConocimiento`), tablero (`indicadores.py`), filtros y paginación de
+tickets y CMDB, reclasificación entre procesos (`ReclasificacionTicket`,
+migración 0002), grafo CMDB (`cmdb/grafos.py`) y grafo ITSM
+(`service_desk/grafos.py`), `generate_cmdb`, `seed_service_desk`, volumen
+Docker `adjuntos`, `probe_service_desk.py`, verify.sh ampliado y tests SD.
+Una fase nueva debe confirmar su propia autorización.
 
 Las migraciones nuevas se aplicaron solo en PostgreSQL efímero. No afirmar que
 pasan pruebas PP2/SD hasta ejecutarlas; `Usuario.rol` cambió y requiere
@@ -88,11 +94,14 @@ No borrar ni renombrar los duplicados aportados por el usuario.
 
 ## Contrato restante de Service Desk
 
-Pendiente: portal solicitante, consola de agente, FAQ/nivel 0, búsqueda y
-paginación de tickets, tablero e indicadores, demo con ≥7 colas, roles admin/
-solicitante/agente/aprobador/consulta y ≥35 tickets (5/proceso) con E0–E3 e
-I0–I6; generador ≥5,000 dispositivos, importador CMDB y recorridos de grafo;
-volumen privado de adjuntos en Compose; harness y SD-P01–P18.
+Código presente (inspección estática): demo con 8 colas (una por proceso más
+INC-N2), roles admin/solicitante/agente/agente2/aprobador/consulta, 37
+escenarios [DEMO] (≥5/proceso) más incidentes derivados de E2/E3, E0–E3,
+I0–I6 y cadena evento→incidente→problema→cambio; generador ≥5,000 CI; tests
+SD-P01–P17 (SD-P18 en verify-persistence.sh) más FAQ, administración, bajas,
+reclasificación y grafo ITSM. Pendiente: ejecutar verify.sh, registrar
+resultados reales en PRUEBAS/MATRIZ y crear evidencias/FASE_CIERRE_SD.md
+(enlazado desde RESOLUCION), importador CMDB desde Excel si se exige, push.
 
 **Límite de fidelidad:** fuentes no enumeran taxonomía adicional de dispositivos;
 el modelo mínimo se decide en ANALISIS_CMDB, sin usar organigrama ni SKMS/CMS
@@ -110,7 +119,7 @@ de relleno ni contar planes como ciclos.
 PP2-P01–PP2-P12 son pruebas anteriores. SD-P01–SD-P18 son los nuevos escenarios
 según T §11; sus números no significan lo mismo. No renombrar métodos existentes.
 SD-Rxx son requisitos de trazabilidad; SD-Xxx son controles futuros adicionales.
-Todas las pruebas SD están pendientes de implementación/ejecución.
+Las pruebas SD están implementadas y pendientes de ejecución.
 
 Controles ligeros usados en V6 (entorno aislado, configuración sintética, sin
 leer .env). Sin Django en el host: imagen `catalogo-servicios:local` con `src/`

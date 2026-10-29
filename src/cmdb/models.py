@@ -63,6 +63,17 @@ class ClasificacionCI(CatalogoCMDB):
     def nivel(self):
         return len(self._ancestor_ids()) + 1
 
+    def ruta(self):
+        """Raíz → nodo; la jerarquía es acíclica por validación."""
+        nodos, actual = [], self
+        while actual is not None:
+            nodos.append(actual)
+            actual = actual.padre
+        return list(reversed(nodos))
+
+    def ruta_codigos(self):
+        return [nodo.codigo for nodo in self.ruta()]
+
     def clean(self):
         # Comprobar antes de la guarda común, que recorre la jerarquía activa.
         self._ancestor_ids()

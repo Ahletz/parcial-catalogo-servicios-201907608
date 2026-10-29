@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block title %}Tickets{% endblock %}
+{% block content %}
+<div class="heading"><h1>Tickets</h1><a class="button" href="{% url 'sd-ticket-nuevo' %}">Registrar ticket</a></div>
+<form method="get" class="panel filters">
+{% for field in filtros %}<div>{{ field.label_tag }}{{ field }}{{ field.errors }}</div>{% endfor %}
+<div class="actions"><button type="submit">Filtrar</button><a href="{% url 'sd-tickets' %}">Limpiar</a></div></form>
+<p>{{ page.paginator.count }} tickets · Página {{ page.number }} de {{ page.paginator.num_pages }} · Orden: prioridad y antigüedad</p>
+<div class="table-wrap"><table>
+<thead><tr><th>Número</th><th>Título</th><th>Proceso</th><th>Cola</th><th>Estado</th><th>Prioridad</th><th>Responsable</th><th>Servicio</th><th>Creado</th></tr></thead>
+<tbody>{% for t in page %}<tr>
+<td><a href="{% url 'sd-ticket' numero=t.numero %}">{{ t.numero }}</a></td><td>{{ t.titulo }}</td><td>{{ t.get_proceso_display }}</td>
+<td>{{ t.cola.codigo }}</td><td>{{ t.estado }}</td><td>{{ t.get_prioridad_display }}</td><td>{{ t.responsable|default:"Sin asignar" }}</td>
+<td>{{ t.servicio.codigo }}</td><td>{{ t.created_at|date:"Y-m-d H:i" }}</td></tr>
+{% empty %}<tr><td colspan="9">Sin tickets para los criterios.</td></tr>{% endfor %}</tbody></table></div>
+{% include 'service_desk/_paginacion.html' %}
+{% endblock %}

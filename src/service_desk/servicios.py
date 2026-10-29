@@ -19,8 +19,8 @@ from processes.definiciones import DEFINICIONES
 from processes.motor import Actor, Contexto, aplicar_campos, ejecutar, registrar
 from .adjuntos import validar_archivo
 from .models import (
-    AdjuntoTicket, ColaServiceDesk, ComentarioTicket, Notificacion, RelacionTicket, Ticket,
-    TicketCI, TransferenciaTicket, Visibilidad,
+    AdjuntoTicket, ColaServiceDesk, ComentarioTicket, Notificacion, ReclasificacionTicket,
+    RelacionTicket, Ticket, TicketCI, TransferenciaTicket, Visibilidad,
 )
 from .permisos import (
     Capacidad, capacidades, es_solicitante, exigir, exigir_capacidad,
@@ -426,3 +426,57 @@ def tickets_visibles(usuario):
     return Ticket.objects.filter(
         Q(solicitante=usuario) | Q(creador=usuario) | Q(cola_id__in=colas)
     ).distinct()
+
+
+def reclasificar_ticket(actor, ticket_id, *, tipo, cola_destino, motivo, subtipo="",
+                        detalle=None):
+    """Cambia proceso/tipo de forma explícita: reinicia el flujo y conserva historia."""
+    motivo = _texto(motivo, "La reclasificación exige motivo.")
+    with ticket_bloqueado(ticket_id) as ticket:
+        exigir_capacidad(actor, ticket, Capacidad.TRANSFERIR, Capacidad.ADMINISTRAR)
+        _exigir_abierto(ticket)
+        proceso = proceso_de(tipo, subtipo)
+        if proceso is None:
+            raise ValidationError("Tipo/subtipo destino sin proceso.")
+        if proceso == ticket.proceso:
+            raise ValidationError("Para el mismo proceso usa transferencia, no reclasificación.")
+        cola_destino = ColaServiceDesk.objects.get(pk=cola_destino.pk)
+        if cola_destino.proceso != proceso or not cola_destino.estado:
+            raise ValidationError("La cola destino debe estar activa y pertenecer al proceso.")
+        definicion = DEFINICIONES[proceso]
+        if definicion.modelo_detalle().objects.filter(ticket_id=ticket.pk).exists():
+            raise ValidationError("El ticket ya pasó por ese proceso; abre un ticket nuevo.")
+        anterior = {"proceso": ticket.proceso, "tipo": ticket.tipo, "subtipo": ticket.subtipo,
+                    "estado": ticket.estado, "cola": ticket.cola}
+        responsable = ticket.responsable
+        if responsable and Capacidad.ATENDER not in capacidades(responsable, cola_destino):
+            responsable = None
+        ticket.tipo, ticket.subtipo, ticket.proceso = tipo, subtipo, proceso
+        ticket.estado, ticket.cola, ticket.responsable = (
+            definicion.estado_inicial, cola_destino, responsable
+        )
+        ticket.fecha_resolucion = None
+        ticket._reclasificacion = True
+        ReclasificacionTicket(
+            ticket=ticket, proceso_anterior=anterior["proceso"], proceso_nuevo=proceso,
+            tipo_anterior=anterior["tipo"], tipo_nuevo=tipo,
+            subtipo_anterior=anterior["subtipo"], subtipo_nuevo=subtipo,
+            estado_anterior=anterior["estado"], estado_nuevo=definicion.estado_inicial,
+            cola_anterior=anterior["cola"], cola_nueva=cola_destino, actor=actor, motivo=motivo,
+        ).save()
+        ticket.save()
+        ticket._reclasificacion = False
+        datos = dict(detalle or {})
+        sobrantes = set(datos) - set(definicion.campos_entrada)
+        if sobrantes:
+            raise ValidationError(f"Datos no admitidos: {sorted(sobrantes)}.")
+        detalle_obj = definicion.modelo_detalle()(ticket=ticket, **datos)
+        detalle_obj.save()
+        for guarda in definicion.entrada:
+            guarda(Contexto(ticket, detalle_obj, actor, datos, motivo))
+        for campo in ("proceso", "tipo", "estado"):
+            registrar(ticket, actor, "RECLASIFICAR", campo=campo, antes=anterior[campo],
+                      despues=getattr(ticket, campo), motivo=motivo)
+        registrar(ticket, actor, "RECLASIFICAR", campo="cola", antes=anterior["cola"].pk,
+                  despues=cola_destino.pk, motivo=motivo)
+    return ticket

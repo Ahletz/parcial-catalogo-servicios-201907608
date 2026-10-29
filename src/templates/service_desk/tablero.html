@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+{% block title %}Tablero{% endblock %}
+{% block content %}
+<h1>Tablero e indicadores</h1>
+<p class="muted">Corte {{ d.corte|date:"Y-m-d H:i" }} · tiempo calendario · universo: tickets que puedes ver ({{ d.total }}; {{ d.abiertos }} abiertos, {{ d.cerrados }} cerrados). Fórmulas en docs/PROCESOS.md.</p>
+<div class="grid2">
+{% for nombre, filas in d.conteos.items %}<section class="panel"><h2>Por {{ nombre }}</h2><table><tbody>{% for k, v in filas %}<tr><td>{{ k }}</td><td>{{ v }}</td></tr>{% endfor %}</tbody></table></section>{% endfor %}
+<section class="panel"><h2>Tiempos (horas)</h2><table><thead><tr><th>Indicador</th><th>n</th><th>Promedio</th><th>Máximo</th></tr></thead><tbody>
+<tr><td>Antigüedad abiertos</td><td>{{ d.antiguedad_abiertos.n }}</td><td>{{ d.antiguedad_abiertos.promedio_h|default_if_none:"—" }}</td><td>{{ d.antiguedad_abiertos.maximo_h|default_if_none:"—" }}</td></tr>
+<tr><td>Duración cerrados</td><td>{{ d.antiguedad_cerrados.n }}</td><td>{{ d.antiguedad_cerrados.promedio_h|default_if_none:"—" }}</td><td>{{ d.antiguedad_cerrados.maximo_h|default_if_none:"—" }}</td></tr>
+<tr><td>Primera atención</td><td>{{ d.primera_atencion.n }}</td><td>{{ d.primera_atencion.promedio_h|default_if_none:"—" }}</td><td>{{ d.primera_atencion.maximo_h|default_if_none:"—" }}</td></tr>
+<tr><td>Resolución</td><td>{{ d.resolucion.n }}</td><td>{{ d.resolucion.promedio_h|default_if_none:"—" }}</td><td>{{ d.resolucion.maximo_h|default_if_none:"—" }}</td></tr>
+</tbody></table><p class="muted">Sin primera atención (pendientes): {{ d.sin_primera_atencion }}</p></section>
+</div>
+<section class="panel"><h2>Cumplimiento de objetivos por cola</h2>
+<div class="table-wrap"><table><thead><tr><th>Cola</th><th>Resolución: cumplidos/elegibles</th><th>%</th><th>Vencidos abiertos</th><th>Primera atención: cumplidos/elegibles</th><th>%</th></tr></thead>
+<tbody>{% for cola, f in d.cumplimiento.items %}<tr><td>{{ cola }}</td><td>{{ f.cumplidos }}/{{ f.elegibles }}</td><td>{{ f.porcentaje|default_if_none:"sin datos" }}</td><td>{{ f.vencidos_abiertos }}</td><td>{{ f.atencion_cumplidos }}/{{ f.atencion_elegibles }}</td><td>{{ f.porcentaje_atencion|default_if_none:"sin datos" }}</td></tr>{% endfor %}</tbody></table></div></section>
+{% endblock %}

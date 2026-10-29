@@ -1,0 +1,4 @@
+<div class="pagination" aria-label="Páginas">
+{% if page.has_previous %}<a href="?{{ query }}{% if query %}&amp;{% endif %}page={{ page.previous_page_number }}">Anterior</a>{% endif %}
+{% if page.has_next %}<a href="?{{ query }}{% if query %}&amp;{% endif %}page={{ page.next_page_number }}">Siguiente</a>{% endif %}
+</div>

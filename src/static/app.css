@@ -41,3 +41,8 @@ dt { font-weight: 650; }
 dd { margin: 0; overflow-wrap: anywhere; }
 footer { padding: 1rem 4%; color: #52667a; border-top: 1px solid #ccd7e3; }
 @media (max-width: 600px) { .detail { grid-template-columns: 1fr; } dd { margin-bottom: .75rem; } .identity { width: 100%; } }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1rem; margin: 1rem 0; }
+.interna { border-left: 4px solid #b5651d; background: #fff7ee; }
+.muted { color: #52667a; font-size: .9rem; }
+.grafo svg { width: 100%; height: auto; background: white; border: 1px solid #ccd7e3; border-radius: .4rem; }
+.grafo text { font-size: 11px; }

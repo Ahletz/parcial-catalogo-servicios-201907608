@@ -16,4 +16,4 @@ qa_web_after="$(qa_compose ps -q web)"
 qa_volume_after="$(docker inspect --format '{{range .Mounts}}{{if eq .Destination "/var/lib/postgresql/data"}}{{.Name}}{{end}}{{end}}' "$qa_db_after")"
 [[ "$qa_before" == "$qa_after" && "$qa_db_before" != "$qa_db_after" && "$qa_web_before" != "$qa_web_after" && -n "$qa_volume_before" && "$qa_volume_before" == "$qa_volume_after" ]]
 printf '%s\n' "$qa_before" "$qa_after"
-printf 'P12 APROBADA: db/web recreados, volumen %s conservado, dato idéntico.\n' "$qa_volume_after"
+printf 'SD-P18/PP2-P12 APROBADA: db/web recreados, volumen %s conservado, dato idéntico.\n' "$qa_volume_after"

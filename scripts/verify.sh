@@ -19,8 +19,11 @@ qa_compose exec -T web python manage.py check
 qa_compose exec -T web python manage.py makemigrations --check --dry-run
 qa_compose run --rm runner python /app/scripts/probe_final.py
 docker run --rm --network host -e APP_PORT="$APP_PORT" catalogo-servicios:local python /app/scripts/probe_host.py
-# ÚNICA invocación completa: incluye P01–P11 y las 165 regresiones aprobadas.
+# Datos SD: 5,000 CI (dos veces, misma semilla) + demo (dos veces); SD-P03/P16 con tiempos.
+qa_compose exec -T web python /app/scripts/probe_service_desk.py
+# ÚNICA invocación completa: PP2 (P01–P11 y regresiones) + SD-P01–SD-P17.
 qa_compose run --rm runner python manage.py test tests --keepdb --verbosity 2
+# SD-P18 / PP2-P12: recrear db/web y comprobar catálogo, CMDB, tickets e historial.
 bash scripts/verify-persistence.sh
 qa_compose exec -T web python /app/scripts/check_sources.py
-echo 'P01-P12 APROBADAS. VERIFICACION FINAL OK.'
+echo 'PP2 P01-P12 y SD-P01-P18 APROBADAS. VERIFICACION FINAL OK.'
