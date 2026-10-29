@@ -1,7 +1,7 @@
 # Registro inicial de decisiones
 
 > El registro PP2 siguiente es histórico. La actualización vigente de alcance
-> Service Desk está al final (D31–D46), con [V4](contexto/CONTEXTO_V4.md) histórico y [V5](contexto/CONTEXTO_V5.md) vigente.
+> Service Desk está al final (D31–D56); [V6](contexto/CONTEXTO_V6.md) vigente, V4/V5 históricos.
 > Las autorizaciones de implementación/cierre citadas en fases antiguas no
 > se aplican automáticamente a otras fases. La solicitud CMDB autoriza modelo, migración y controles ligeros; sin carga masiva ni suite.
 
@@ -273,3 +273,27 @@ Fuente: [ANALISIS_CMDB](ANALISIS_CMDB.md), con hojas/celdas y páginas.
 SD-DP08 queda resuelto para distinguir dispositivo por clasificación explícita;
 distribución y carga siguen pendientes. SD-DP09 adopta guardas actuales para
 esta fase, sin afirmar rendimiento a 5,000. Las decisiones no crean datos fuente.
+
+## Service Desk — decisiones D47–D56, 2026-10-29 (V6)
+
+Solicitud SD-PE03: integrar CMDB e implementar tickets, colas, permisos,
+asignación concurrente y siete procesos. Contexto [V6](contexto/CONTEXTO_V6.md);
+evidencia [FASE_SERVICE_DESK](evidencias/FASE_SERVICE_DESK.md).
+
+| ID | Estado | Decisión y justificación |
+|---|---|---|
+| D47 | Adoptada: integración | CMDB por bundle y `merge --ff-only` (commits 2fb2521/35403e6 intactos); parche no aplicado. Reproducción manual descartada al localizar los artefactos. |
+| D48 | Adoptada: roles (SD-DP03) | `Usuario.rol` añade OPERATIVO (sin escritura PP2). Solicitante/agente/aprobador son `AsignacionRolSD` aditivas; admin y consulta siguen siendo valores globales. CONSULTA recorta toda capacidad a CONSULTAR aunque tenga roles o membresías. |
+| D49 | Adoptada: colas/capacidades | `ColaServiceDesk` con un único `proceso` (choices), nivel 0–4, orden PRIORIDAD_ANTIGUEDAD y objetivos de primera atención/resolución. `MembresiaCola` con exactamente un sujeto (usuario o rol) y cinco banderas separadas. Admin global obtiene CONSULTAR+ADMINISTRAR; atender/transferir/aprobar solo por membresía. |
+| D50 | Adoptada: concurrencia (SD-DP09 parcial) | Operaciones en `service_desk.servicios`: `domain_transaction` (lock advisory) y luego `select_for_update(of=self)`. `tomar_ticket` falla con `ConflictoAsignacion` si ya hay responsable. Sin bypass de full_clean ni bulk. Rendimiento a escala no medido. |
+| D51 | Adoptada: transferencia (SD-DP10) | Solo a cola activa distinta del mismo proceso; motivo obligatorio; `TransferenciaTicket` guarda colas, responsables, actor y fecha. Reclasificación entre procesos no implementada. Cola/usuario no se desactivan ni pasan a consulta con tickets abiertos asignados; tampoco se retira la capacidad atender que los sostiene. |
+| D52 | Adoptada: Ticket | N1 derivado (`ticket.nivel1`), número `SD-000001` desde secuencia serializada por el lock, UUID público, campos de alta inmutables, estado validado contra la definición y aprobación vigente exigida también en `Ticket.clean`. Sin CI → `motivo_sin_ci` obligatorio; no se crean CI ficticios. |
+| D53 | Adoptada: nuevos servicios (SD-DP04) | El ticket atiende un N2 existente; el resultado (crear o vincular) vive en `DetalleNuevoServicio`. Crear valida código único y nombre no repetido en el mismo N1 antes de aprobar y al cerrar. |
+| D54 | Adoptada: incidentes (SD-DP05) | Tabla L25-16 como referencia. Regla complementaria: bandas consecutivas (I1 ≤3 h, I2 ≤8 h, I3 ≤2 d, I4 ≤1 sem, I5 ≥30 d), hueco 1 sem–30 d sin sugerencia; seguridad→I6, sin interrupción→I0. Solo sugiere; si la persona elige otra o no hay sugerencia, exige motivo. Configurable con `SD_BANDAS_INCIDENTE`. |
+| D55 | Adoptada: soporte (SD-DP06) | `NivelSoporte` 0–4 (L25-11) y `EQUIVALENCIA_SOPORTE_0_3` (L25-12/13: 2 y 3 → 2; 4 → 3). Sin cuotas 20/70/5/5. |
+| D56 | Adoptada: adjuntos (SD-DP07 parcial) | Máx. 10 MiB (`SD_ADJUNTO_MAX_BYTES`), PDF/PNG/JPEG/TXT (`SD_ADJUNTO_EXTENSIONES`), MIME declarado y firma de contenido comprobados, nombre saneado, ruta física UUID en `SD_ADJUNTOS_DIR` privado, descarga solo por vista autenticada y autorizada. Volumen Docker para adjuntos pendiente. |
+
+Aprobación (todas las decisiones de proceso): el aprobador no puede ser el
+solicitante ni el creador; en accesos tampoco el beneficiario. La aprobación
+guarda una huella SHA-256 del contenido aprobado (en cambios incluye los CI);
+modificarlo invalida la aprobación para ejecutar/implementar/provisionar.

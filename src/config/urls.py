@@ -1,5 +1,5 @@
 from django.contrib.auth.views import LoginView, LogoutView
-from django.urls import path
+from django.urls import include, path
 
 from accounts.forms import LocalAuthenticationForm
 from . import web
@@ -18,4 +18,5 @@ urlpatterns = [
     path("datos/<slug:entity>/<int:pk>/editar/", web.entity_form, name="entity-edit"),
     path("datos/<slug:entity>/<int:pk>/desactivar/", web.deactivate, name="entity-deactivate"),
     path("servicios/<int:pk>/", web.service_detail, name="service-detail"),
+    path("service-desk/", include("service_desk.urls")),
 ]

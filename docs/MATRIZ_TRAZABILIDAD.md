@@ -105,3 +105,36 @@ Modelo de seis entidades y migración preparados en fase V5; detalle en [MODELO]
 | SD-R27 | ServicioCI y FK Usuario | SD-P14; sin TicketCI |
 | SD-R29/34 | Modelo técnico tipado y guardas contra ciclos | SD-P04/14; sin recorrido público |
 | SD-R31 | V5 y prompt SD-PE02 | Contexto real; no ciclo funcional ejecutado |
+
+## Avance Service Desk (2026-10-29, V6)
+
+Implementación en `src/service_desk` y `src/processes`; detalle en
+[MODELO](MODELO.md#service-desk-implementado-v6), [PROCESOS](PROCESOS.md#implementación-vigente-v6)
+y [FASE_SERVICE_DESK](evidencias/FASE_SERVICE_DESK.md). **Ninguna prueba SD
+ejecutada**: el estado es «implementado, sin verificar».
+
+| Requisito SD | Implementación | Prueba futura / límite |
+|---|---|---|
+| SD-R01 | CONSULTA recortada a lectura en `permisos.capacidades`; rol OPERATIVO sin escritura PP2 | SD-P06; regresiones PP2 por valor nuevo de rol |
+| SD-R03 | `Ticket` (N1 derivado, número/UUID, fechas, canal, prioridad…) | SD-P05 |
+| SD-R04 | `servicios`: crear, tomar, asignar, liberar, transferir, `ejecutar_accion`, reabrir/cerrar por definición | SD-P07/09/10 |
+| SD-R05 | `TicketCI` + `motivo_sin_ci`; `RelacionTicket` tipada | SD-P05/11/13 |
+| SD-R06 | `ComentarioTicket`/`AdjuntoTicket` con visibilidad; `validar_archivo`; vista `sd-adjunto` autorizada | SD-P08 |
+| SD-R07 | Índices y `tickets_visibles`/`tickets_en_cola`; sin UI de búsqueda/paginación | Pendiente portal/consola |
+| SD-R08 | Visibilidad propia/cola; `AccionTicket` anexable | SD-P06/08 |
+| SD-R09/10 | `ColaServiceDesk`, `MembresiaCola` (usuario o rol), cinco capacidades | SD-P06 |
+| SD-R11 | Orden prioridad→antigüedad→PK; `tomar_ticket` con lock advisory + `select_for_update`; `TransferenciaTicket`; bajas sin huérfanos | SD-P07 (no ejecutada) |
+| SD-R12 | Definición NUEVOS_SERVICIOS + crear/vincular N2 sin duplicado | SD-P09 |
+| SD-R13 | Definición CAMBIOS; ejecutar exige aprobación vigente (guarda + modelo) | SD-P10 |
+| SD-R14 | Definición INCIDENTES; I0–I6, afectación, duraciones, redundancia, solución | SD-P12 |
+| SD-R15 | Definición EVENTOS; E0–E3; `vincular_incidente_evento` idempotente; `Notificacion` | SD-P11 |
+| SD-R16 | Definición PROBLEMAS; incidentes y cambio correctivo vía `RelacionTicket` | SD-P13 |
+| SD-R17 | Definición ACCESOS; autoaprobación bloqueada (guarda + `Aprobacion.clean`) | SD-P09/06 |
+| SD-R18 | Definición SERVICIOS_TECNOLOGIA con confirmación del solicitante | SD-P09 |
+| SD-R19 | `MAPEO_TIPO_PROCESO` y motor común con definiciones distintas | SD-P09 |
+| SD-R20 | `REFERENCIA_INCIDENTES`, `sugerir_categoria_incidente` (D54) | SD-P12 |
+| SD-R21 | `NivelSoporte` 0–4 y `EQUIVALENCIA_SOPORTE_0_3` | Sin escalamiento automático entre colas |
+| SD-R22/23 | No implementado (portal, FAQ, consola, tablero, indicadores) | Fase futura |
+| SD-R31 | V6, prompt SD-PE03 | Contexto real; sin ciclo de Loop ejecutado |
+| SD-R35 | `SD_ADJUNTOS_DIR` privado | Volumen Docker para adjuntos pendiente |
+| SD-R36 | Sin demo de colas/tickets | Fase futura (≥7 colas, ≥35 tickets) |

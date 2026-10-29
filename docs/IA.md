@@ -119,3 +119,15 @@ El enunciado no exige Neo4j, una librería específica ni llamadas a IA en runti
 ## Avance real CMDB — V5
 
 Segundo prompt SD realmente usado: [SD-PE02](prompts/SD_P02_CMDB.md); actualización justificada [V5](contexto/CONTEXTO_V5.md). Modelo/migración preparados y validaciones ligeras en [FASE_CMDB](evidencias/FASE_CMDB.md). Sin pruebas funcionales, no acreditar un ciclo completo de Loop ni una mejora de prompt por revisión estática.
+
+## Avance real Service Desk — V6
+
+Tercer prompt SD realmente usado: [SD-PE03](prompts/SD_P03_SERVICE_DESK.md)
+(Claude Code, Claude Opus 5.5), que cubre los temas modelo, colas, procesos y
+seguridad de T §9. Actualización justificada [V6](contexto/CONTEXTO_V6.md):
+rol OPERATIVO, orden de locks y estado de integración CMDB. Evidencia en
+[FASE_SERVICE_DESK](evidencias/FASE_SERVICE_DESK.md): solo `check`,
+`makemigrations --check --dry-run` y `migrate` en PostgreSQL efímero.
+No se acredita ciclo de Loop ni mejora de prompt: no hubo control funcional
+fallido y repetido. La localización tardía de los artefactos CMDB fue una
+corrección de ejecución, registrada en el prompt sin presentarla como mejora.

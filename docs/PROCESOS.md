@@ -1,9 +1,120 @@
-# Procesos, colas y permisos previstos
+# Procesos, colas y permisos
 
-Fecha: 2026-10-29. **Diseño propuesto, sin funcionalidad implementada.** Fuentes:
+Fecha: 2026-10-29. **V6: núcleo implementado en `src/processes` y
+`src/service_desk`, sin pruebas funcionales todavía** ([evidencia](evidencias/FASE_SERVICE_DESK.md)).
+La sección «Implementación vigente» describe el código; las secciones
+posteriores conservan el diseño propuesto en V4 como antecedente. Fuentes:
 T §§4–7/11 y L25-11–16, inventariadas en [FUENTES_SERVICE_DESK](FUENTES_SERVICE_DESK.md).
-Estados internos, políticas y umbrales propuestos aquí no son transcripciones
-literales de las diapositivas; deberán cerrarse antes de programar.
+Estados internos, bandas y límites son decisiones del proyecto (D47–D56), no
+transcripciones literales de las diapositivas.
+
+## Implementación vigente (V6)
+
+### Tipo ↔ proceso
+
+Mapeo único en `processes/catalogo.py::MAPEO_TIPO_PROCESO`; `Ticket.clean`
+rechaza combinaciones fuera de la tabla.
+
+| Tipo (L25-14) | Subtipo | Proceso |
+|---|---|---|
+| Solicitud de acceso | — | Accesos |
+| Evento | — | Eventos |
+| Incidente | — | Incidentes |
+| Solicitud de cambio | — | Cambios |
+| Requisición de servicio | Nuevo servicio | Nuevos servicios |
+| Requisición de servicio | Servicio existente | Servicios de tecnología |
+| Problema | — | Problemas |
+
+### Motor y definiciones
+
+`processes/motor.py` ejecuta una `Transicion` (acción, orígenes, destino, actor,
+campos admitidos, guardas, efectos, motivo obligatorio, decisión de aprobación);
+`processes/definiciones.py` declara siete `DefinicionProceso` con estados,
+campos de alta/edición, condiciones de entrada y estados que exigen aprobación.
+Cada proceso guarda sus datos en un modelo de detalle propio
+(`DetalleNuevoServicio`, `DetalleCambio`, `DetalleIncidente`, `DetalleEvento`,
+`DetalleProblema`, `DetalleAcceso`, `DetalleServicioTecnologia`).
+
+Actores: **A** agente responsable con capacidad atender; **P** capacidad
+aprobar (distinto de solicitante/creador; en accesos también del beneficiario);
+**S** solicitante; **S/A** cualquiera de ambos. CONSULTA nunca ejecuta.
+
+| Proceso | Ruta (acción → estado) | Guardas / evidencias |
+|---|---|---|
+| Nuevos servicios | SOLICITADO –analizar(A)→ ANALISIS –enviar_aprobacion(A)→ PENDIENTE_APROBACION –aprobar(P)→ APROBADO –implementar(A)→ IMPLEMENTACION –cerrar(A)→ CERRADO; –rechazar(P, motivo)→ RECHAZADO –cerrar→ CERRADO | Entrada: necesidad. Envío: viabilidad + modo CREAR (código/nombre/N1/sección, sin duplicado) o VINCULAR (N2 activo). Implementar/cerrar: aprobación vigente; cerrar crea el N2 o conserva el vinculado. |
+| Cambios | SOLICITADO –evaluar→ EVALUACION –enviar_aprobacion→ PENDIENTE_APROBACION –aprobar(P)/rechazar(P)→ APROBADO/RECHAZADO; APROBADO –planificar→ PLANIFICADO –ejecutar→ EJECUCION –validar→ VALIDACION –cerrar→ CERRADO; VALIDACION –revertir(motivo)→ REVERSION –cerrar→ CERRADO; APROBADO/PLANIFICADO –reevaluar(motivo)→ EVALUACION | CI afectados o justificación; impacto, riesgo, plan de pruebas y de reversión antes de aprobar; fecha planificada. **Ejecutar exige aprobación vigente** (huella con planes y CI) en la guarda y en `Ticket.clean`. Validación: resultado y éxito; reversión: evidencia. |
+| Incidentes | REGISTRADO –clasificar→ CLASIFICADO –diagnosticar→ DIAGNOSTICO –atender→ ATENCION –recuperar→ RECUPERADO –resolver→ RESUELTO –cerrar(S/A)→ CERRADO; ATENCION –escalar(motivo, nivel)→ ESCALADO –diagnosticar→ DIAGNOSTICO; RESUELTO –reabrir(S/A, motivo)→ ATENCION | Clasificar: afectación (sin interrupción/degradación/interrupción/seguridad), categoría I0–I6, prioridad, redundancia, duración estimada; motivo si difiere de la sugerencia. Resolver: solución aplicada, resolución, duración real. Cerrar: CI o justificación. |
+| Eventos | REGISTRADO –clasificar→ CLASIFICADO; E0: –cerrar→ CERRADO; E1/E2/E3: –evaluar→ EVALUADO; E1: –cerrar→ CERRADO; E2/E3: –responder→ RESPONDIDO –cerrar→ CERRADO | Clave de evento única (alta idempotente con `registrar_evento`). Responder/cerrar E2/E3 exige incidente vinculado. |
+| Problemas | REGISTRADO –investigar→ INVESTIGACION –identificar_causa→ CAUSA_IDENTIFICADA [–registrar_error_conocido→ ERROR_CONOCIDO] –planificar_solucion→ SOLUCION_PLANIFICADA –resolver→ RESUELTO –cerrar→ CERRADO; RESUELTO –reabrir(motivo)→ INVESTIGACION | Investigar: ≥1 incidente vinculado (INCIDENTE_PROBLEMA). Causa raíz; workaround para error conocido; solución definitiva y cambio correctivo (PROBLEMA_CAMBIO) o justificación sin cambio. |
+| Accesos | SOLICITADO –enviar_aprobacion→ PENDIENTE_APROBACION –aprobar(P)/rechazar(P)→ APROBADO/RECHAZADO; APROBADO –provisionar/revocar→ PROVISIONADO/REVOCADO –validar→ VALIDADO –cerrar→ CERRADO; RECHAZADO –cerrar→ CERRADO | Entrada: beneficiario, recurso, permiso, acción PROVISION/REVOCACION. **El solicitante (y el beneficiario) no puede aprobar**: guarda + `Aprobacion.clean`. Provisión/revocación: aprobación vigente, acción coincidente y evidencia. |
+| Servicios de tecnología | SOLICITADO –validar→ VALIDADO –asignar→ ASIGNADO –iniciar_cumplimiento→ EN_CUMPLIMIENTO –cumplir→ CUMPLIDO –confirmar(S)→ CONFIRMADO –cerrar→ CERRADO; CUMPLIDO –rechazar_cumplimiento(S, motivo)→ EN_CUMPLIMIENTO | N2 existente y activo; responsable asignado; detalle de cumplimiento; confirmación del solicitante. No crea servicios (eso es Nuevos servicios) ni registra recuperación de incidentes. |
+
+`fecha_resolucion` se fija al entrar en un estado de resolución (o al cerrar) y
+se limpia al reabrir; `fecha_cierre` solo en CERRADO. Cada cambio de campo y de
+estado genera `AccionTicket` (actor, fecha, acción, campo, antes, después, motivo).
+
+### Eventos E0–E3
+
+| Categoría | Implementación |
+|---|---|
+| E0 | Solo registro: puede cerrarse tras clasificar; `evaluar` lo rechaza. |
+| E1 | Registro + evaluación obligatoria; cierre sin respuesta operativa. |
+| E2 | Impacto al servicio: `vincular_incidente_evento` crea o vincula incidente; luego responder/cerrar. |
+| E3 | Impacto de seguridad: igual que E2; el incidente creado nace con afectación SEGURIDAD. |
+
+Idempotencia: `DetalleEvento.incidente` no se reemplaza una vez fijado; la
+relación EVENTO_INCIDENTE tiene unicidad parcial por evento y `Notificacion`
+es única por (evento, incidente). Repetir la operación devuelve el mismo
+incidente con `creado=False`. Reprocesar la misma `clave_evento` devuelve el
+evento existente.
+
+### Incidentes I0–I6
+
+Las siete categorías y la referencia docente de prioridad/redundancia están en
+`CategoriaIncidente`/`REFERENCIA_INCIDENTES`. `sugerir_categoria_incidente`
+aplica la regla complementaria D54 (bandas consecutivas, hueco 1 semana–30 días
+sin sugerencia, duración desconocida sin sugerencia). La categoría la elige una
+persona; `categoria_sugerida` solo se guarda como contraste y un desacuerdo o
+ausencia de sugerencia exige `motivo_categoria`. Duraciones negativas se
+rechazan. Las bandas son configurables (`SD_BANDAS_INCIDENTE`) y no son SLA.
+
+### Niveles de soporte
+
+`NivelSoporte` 0 Autoservicio, 1 Help Desk, 2 Soporte técnico, 3 Ingenieros,
+4 Externo/proveedores (L25-11). L25-12/13 numeran 0–3; equivalencia en
+`EQUIVALENCIA_SOPORTE_0_3`: 0→0, 1→1, 2→2, 3→2, 4→3. Los porcentajes 20/70/5/5
+se conservan como referencia, sin cuotas.
+
+### Colas, asignación y concurrencia
+
+- `ColaServiceDesk`: código único, nombre, descripción, estado, **un** proceso,
+  nivel, regla de orden, objetivos de primera atención/resolución.
+- Orden determinista: prioridad (1 crítica … 4 baja), `created_at`, PK.
+- Política manual/mixta: `tomar_ticket` (agente con ATENDER), `asignar_ticket`
+  (TRANSFERIR o ADMINISTRAR; reasignar exige motivo), `liberar_ticket`,
+  `transferir_ticket` (TRANSFERIR, mismo proceso, motivo, `TransferenciaTicket`).
+- Concurrencia: `domain_transaction` y luego `select_for_update`; si ya hay
+  responsable, `ConflictoAsignacion`. Solo un agente gana.
+
+### Autorización en servidor (`service_desk/permisos.py`)
+
+1. Autenticado, activo y rol válido; si no, nada.
+2. Capacidades = unión de membresías activas del usuario y de sus roles SD.
+   Una capacidad operativa implica CONSULTAR. Admin global suma CONSULTAR y
+   ADMINISTRAR en toda cola.
+3. **CONSULTA**: las capacidades se recortan a CONSULTAR; no escribe, no ve
+   notas internas ni adjuntos internos, aunque tenga membresía o rol SD.
+4. Cola inactiva: sin atender/transferir/aprobar.
+5. Ver ticket: solicitante/creador o CONSULTAR en la cola. Comentario público:
+   solicitante o capacidad operativa. Nota interna: capacidad operativa.
+6. Adjuntos: `/service-desk/adjuntos/<uuid>/` exige sesión y vuelve a evaluar
+   visibilidad del ticket y del adjunto; responde como descarga con `nosniff`,
+   CSP `sandbox` y `no-store`.
+
+---
+
+Las secciones siguientes conservan el diseño propuesto en V4 como antecedente;
+donde difieran, prevalece la implementación vigente.
 
 ## Tipos y siete procesos
 
