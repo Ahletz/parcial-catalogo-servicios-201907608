@@ -324,5 +324,17 @@ hay escalamiento automático entre colas por nivel (el escalamiento de incidente
 registra nivel y motivo, y la transferencia mueve de cola); notificaciones solo
 internas (sin correo); interfaz funcional mínima sin pruebas de navegador.
 
-Resultados y evidencia: [PRUEBAS](PRUEBAS.md) y
+**Estado final (2026-10-29, commit `f15deb0`).** Verificado con ejecución real
+(bloques A y B1, EXIT=0): build y servicios healthy, integridad de fuentes,
+`check` y `makemigrations --check` limpios, catálogo 12 N1/46 N2 con
+reimportación idempotente, 5,000 CI (510 relaciones, 100 vínculos) sin
+duplicar al repetir la semilla 2026, demo con 8 colas, 37 escenarios y 39
+tickets sin duplicar, y latencias SD-P16 entre 23.7 y 116.2 ms. La suite
+automatizada completa (188 tests) se inició pero no concluyó por limitación de
+recursos del equipo (congelamiento y reinicio): SD-P01 en parte, SD-P04–P15,
+SD-P17, SD-P18 y las regresiones PP2 quedan implementadas con ejecución final
+no completada; no se declaran aprobadas.
+
+Resultados y evidencia: [PRUEBAS](PRUEBAS.md#estado-de-ejecución-cierre-sd),
+[MATRIZ](MATRIZ_TRAZABILIDAD.md#cierre-service-desk-2026-10-29) y
 [FASE_CIERRE_SD](evidencias/FASE_CIERRE_SD.md).

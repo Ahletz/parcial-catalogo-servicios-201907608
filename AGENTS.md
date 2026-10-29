@@ -15,8 +15,8 @@ Implementado sin verificación funcional: `src/service_desk` (Ticket, colas,
 membresías, roles SD, bitácora, comentarios, adjuntos, transferencias, avisos,
 servicios y vista de descarga) y `src/processes` (vocabulario, motor, siete
 definiciones, aprobaciones y detalles). SD-PE04 (prompt
-[SD_P04](docs/prompts/SD_P04_CIERRE_GRAFOS_PRUEBAS_DOCKER.md)) añadió, también
-sin ejecutar: portal solicitante, consola de agente (detalle/colas), FAQ
+[SD_P04](docs/prompts/SD_P04_CIERRE_GRAFOS_PRUEBAS_DOCKER.md)) añadió
+(verificación parcial en «Contrato restante»): portal solicitante, consola de agente (detalle/colas), FAQ
 (`ArticuloConocimiento`), tablero (`indicadores.py`), filtros y paginación de
 tickets y CMDB, reclasificación entre procesos (`ReclasificacionTicket`,
 migración 0002), grafo CMDB (`cmdb/grafos.py`) y grafo ITSM
@@ -94,14 +94,16 @@ No borrar ni renombrar los duplicados aportados por el usuario.
 
 ## Contrato restante de Service Desk
 
-Código presente (inspección estática): demo con 8 colas (una por proceso más
-INC-N2), roles admin/solicitante/agente/agente2/aprobador/consulta, 37
-escenarios [DEMO] (≥5/proceso) más incidentes derivados de E2/E3, E0–E3,
-I0–I6 y cadena evento→incidente→problema→cambio; generador ≥5,000 CI; tests
-SD-P01–P17 (SD-P18 en verify-persistence.sh) más FAQ, administración, bajas,
-reclasificación y grafo ITSM. Pendiente: ejecutar verify.sh, registrar
-resultados reales en PRUEBAS/MATRIZ y crear evidencias/FASE_CIERRE_SD.md
-(enlazado desde RESOLUCION), importador CMDB desde Excel si se exige, push.
+Estado final (commit `f15deb0`, evidencia
+[FASE_CIERRE_SD](docs/evidencias/FASE_CIERRE_SD.md), bloques A/B1 EXIT=0):
+portal, consola de agente, FAQ (5 artículos) y tablero existen; grafo CMDB y
+grafo ITSM implementados (grafo de impacto HTTP 200). CMDB verificada: 5,000 CI,
+510 relaciones, 100 vínculos, semilla 2026, repetición sin duplicar. Seed
+Service Desk verificado: 8 colas, 37 escenarios, 39 tickets, 18 estados,
+13 membresías, repetición sin duplicar. Catálogo 12/46 idempotente. SD-P16
+medido. **Suite completa (188 tests) pendiente por limitación de recursos**:
+congeló el host; no afirmar PASA ni FALLA. Pendiente también SD-P18
+(verify-persistence.sh) e importador CMDB desde Excel si se exige.
 
 **Límite de fidelidad:** fuentes no enumeran taxonomía adicional de dispositivos;
 el modelo mínimo se decide en ANALISIS_CMDB, sin usar organigrama ni SKMS/CMS

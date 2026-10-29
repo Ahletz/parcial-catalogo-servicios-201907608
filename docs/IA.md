@@ -181,6 +181,14 @@ SD-P03/P16 con tiempos) → **una** suite Django (PP2 + SD-P01–P17) → persis
 PP2-P12/SD-P18 → hashes otra vez. Nunca usa `.env`, el proyecto ni el volumen
 de evaluación.
 
+### Loop Engineering
+
+Ciclos con evidencia real conservados en las fases PP2 (ver tabla Loop arriba).
+En el cierre SD el harness se ejecutó por bloques: A y B1 terminaron con
+EXIT=0 ([FASE_CIERRE_SD](evidencias/FASE_CIERRE_SD.md)); la suite completa se
+interrumpió por congelamiento del host. Esa interrupción es una limitación de
+recursos, no un ciclo error→corrección→nueva verificación, y no se cuenta como tal.
+
 ### Graph Engineering
 
 Grafo 1 (CMDB, impacto potencial) y grafo 2 (trazabilidad ITSM) descritos en

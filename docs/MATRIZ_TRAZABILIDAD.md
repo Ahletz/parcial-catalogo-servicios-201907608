@@ -2,8 +2,8 @@
 
 > Matriz histórica del PP2: interpretar sus P01–P12 como **PP2-P01–PP2-P12**.
 > No se renombraron métodos ni se reejecutaron controles. La matriz de la nueva
-> tarea, con **SD-P01–SD-P18**, está en [PRUEBAS](PRUEBAS.md); todos sus
-> resultados funcionales siguen pendientes de implementación y ejecución.
+> tarea, con **SD-P01–SD-P18**, está en [PRUEBAS](PRUEBAS.md); su estado real
+> de cierre está en [Cierre Service Desk](#cierre-service-desk-2026-10-29).
 
 Fuente: [REQUISITOS](REQUISITOS.md), ENUNCIADO §1–10. Fecha: 2026-10-04.
 Estados: COMPLETO exige evidencia ejecutada/documental real; PENDIENTE MANUAL
@@ -138,3 +138,41 @@ ejecutada**: el estado es «implementado, sin verificar».
 | SD-R31 | V6, prompt SD-PE03 | Contexto real; sin ciclo de Loop ejecutado |
 | SD-R35 | `SD_ADJUNTOS_DIR` privado | Volumen Docker para adjuntos pendiente |
 | SD-R36 | Sin demo de colas/tickets | Fase futura (≥7 colas, ≥35 tickets) |
+
+## Cierre Service Desk (2026-10-29)
+
+Sustituye los estados «no implementado / sin verificar» de las secciones V5/V6
+anteriores. Commit `f15deb0`. E = [FASE_CIERRE_SD](evidencias/FASE_CIERRE_SD.md).
+Tests en `tests/test_service_desk.py` (`test_SD_Pxx_*`). Estados:
+VERIFICADO (evidencia real de bloques A/B1, EXIT=0); PARCIAL; IMPLEMENTADO /
+EJECUCIÓN FINAL NO COMPLETADA (la suite de 188 tests congeló el host y no
+concluyó; no se registra ni PASA ni FALLA).
+
+| Requisito | Implementación | Test existente | Evidencia disponible | Estado |
+|---|---|---|---|---|
+| SD-R01 | accounts, `permisos.capacidades` (CONSULTA recortada) | SD-P01, SD-P06, PP2-P01–P03 | E: login 200, anónimo 302 | PARCIAL |
+| SD-R02 | catalog, imports (`import_catalog`) | SD-P02, PP2-P06–P08 | E: N1=12, N2=46, 2ª importación 0 creados | VERIFICADO |
+| SD-R03 | `Ticket`, `forms`, `views.ticket_nuevo` | SD-P05 | E: 39 tickets demo persistidos | IMPLEMENTADO / EJECUCIÓN FINAL NO COMPLETADA |
+| SD-R04 | `servicios`, `processes.motor` | SD-P09, SD-P15 | E: 18 estados distintos en demo | IMPLEMENTADO / EJECUCIÓN FINAL NO COMPLETADA |
+| SD-R05 | `TicketCI`, `RelacionTicket` | SD-P05, SD-P13 | — | IMPLEMENTADO / EJECUCIÓN FINAL NO COMPLETADA |
+| SD-R06 | `ComentarioTicket`, `AdjuntoTicket`, `adjuntos.py`, `descargar_adjunto` | SD-P08 | — | IMPLEMENTADO / EJECUCIÓN FINAL NO COMPLETADA |
+| SD-R07 | `views.filtrar`/`pagina`, `ticket_lista` | SD-P16 | E: paginación/filtros CMDB HTTP 200 | PARCIAL |
+| SD-R08 | `permisos`, `AccionTicket`, `historial_visible` | SD-P06, SD-P15 | — | IMPLEMENTADO / EJECUCIÓN FINAL NO COMPLETADA |
+| SD-R09/R10 | `ColaServiceDesk`, `MembresiaCola`, `AsignacionRolSD` | SD-P06 | E: 8 colas, 13 membresías | PARCIAL (datos verificados; permisos sin resultado) |
+| SD-R11 | `tomar_ticket` (lock advisory → `select_for_update`), `TransferenciaTicket` | SD-P07, SD-P08 | — | IMPLEMENTADO / EJECUCIÓN FINAL NO COMPLETADA |
+| SD-R12–R18 | `processes.definiciones` (7 procesos), `guardas`, `Aprobacion` | SD-P09–P13 | E: ≥5 escenarios por proceso (INCIDENTES 7) | PARCIAL (datos verificados; rutas/guardas sin resultado) |
+| SD-R19/R20/R21 | `MAPEO_TIPO_PROCESO`, I0–I6 (D54), `NivelSoporte` | SD-P09, SD-P12 | — | IMPLEMENTADO / EJECUCIÓN FINAL NO COMPLETADA |
+| SD-R22 | `views.portal`, `colas`/`cola_detalle` (consola), `faq`, `ArticuloConocimiento` | SD-P06, tests FAQ | E: 5 artículos FAQ | PARCIAL |
+| SD-R23 | `indicadores.py`, `views.tablero` | SD-P17 | — | IMPLEMENTADO / EJECUCIÓN FINAL NO COMPLETADA |
+| SD-R24 | `ClasificacionCI` acíclica (mínimo Hardware/Software) | SD-P04 | Taxonomía docente sin fuente (SD-DP01) | IMPLEMENTADO / EJECUCIÓN FINAL NO COMPLETADA |
+| SD-R25/R26 | `CI`, `UbicacionCI`, atributos por clase | SD-P03 | E: 5000 CI en 5 clasificaciones | VERIFICADO (generación); importador Excel CMDB no implementado |
+| SD-R27 | `ServicioCI`, ficha CI | SD-P14 | E: 100 vínculos CI–servicio | PARCIAL |
+| SD-R28 | `generate_cmdb --count 5000 --seed 2026` | SD-P03 | E: 5000/510/100; 2ª ejecución 0/0/0 | VERIFICADO |
+| SD-R29 | `cmdb/grafos.py` (BFS, profundidad 6), paginación CMDB | SD-P04, SD-P14, SD-P16 | E: 8 consultas 23.7–116.2 ms, HTTP 200 | VERIFICADO (rendimiento); ciclos sin resultado |
+| SD-R30/R31/R33 | docs/prompts, AGENTS, contextos V4–V6, IA | Revisión documental | IA.md, prompts SD-PE01–PE04 | Documentado |
+| SD-R32 | `scripts/verify.sh`, `probe_service_desk.py` | Harness | E: bloques A/B1 EXIT=0; suite no concluida | PARCIAL |
+| SD-R34 | `cmdb/grafos.py` (G2 técnico), `service_desk/grafos.py` (ITSM) | SD-P13, SD-P14, test grafo ITSM | E: grafo de impacto HTTP 200 | PARCIAL; G1/G2 pendiente de confirmación docente |
+| SD-R35 | volúmenes `datos_postgres` y `adjuntos` | SD-P18 (`verify-persistence.sh`) | No ejecutado | IMPLEMENTADO / EJECUCIÓN FINAL NO COMPLETADA |
+| SD-R36 | `seed_service_desk` | SD-X08 | E: 8 colas, 37 escenarios, 39 tickets, 2ª ejecución 0 nuevos | VERIFICADO |
+| SD-R37 | `tests/test_service_desk.py`, PRUEBAS | SD-P01–P18 | E: 188 tests descubiertos, suite no concluida | PARCIAL |
+| SD-R38/R39 | README, docs, sin API de IA en runtime | Revisión documental | README, E | Documentado |

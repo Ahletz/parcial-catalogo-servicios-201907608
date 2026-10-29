@@ -1,9 +1,9 @@
 # Matriz y plan de verificación de Service Desk
 
-Fecha: 2026-10-29. Base inspeccionada `9624e34`.
-**Todas las pruebas SD son futuras: NO IMPLEMENTADAS / NO EJECUTADAS.**
-No se ejecutó ninguna suite durante la actualización del contexto.
-Fuente: T §11 pp.7–8, [inventario](FUENTES_SERVICE_DESK.md).
+Fecha: 2026-10-29. Plan inicial sobre `9624e34`; estado vigente sobre `f15deb0`
+en [Estado de ejecución](#estado-de-ejecución-cierre-sd).
+Las tablas siguientes conservan el plan original; el resultado real de cada
+escenario está al final. Fuente: T §11 pp.7–8, [inventario](FUENTES_SERVICE_DESK.md).
 
 `PP2-P01`–`PP2-P12` designa los escenarios antiguos, cuyos métodos no se renombran.
 `SD-P01`–`SD-P18` designa los nuevos: SD-P02 no es el logout del parcial,
@@ -59,9 +59,9 @@ nuevos son propuesta; ninguna referencia a ellos acredita implementación.
 
 ## Los dieciocho escenarios obligatorios
 
-Los identificadores `test_Pxx` son nombres propuestos para una suite futura,
-no funciones existentes. La tabla registra entrada y resultado esperado; el
-resultado obtenido es **pendiente** en los 18 casos.
+Implementados como `test_SD_Pxx_*` en `tests/test_service_desk.py` (SD-P18 en
+`scripts/verify-persistence.sh`). La tabla registra entrada y resultado
+esperado; el resultado obtenido está en [Estado de ejecución](#estado-de-ejecución-cierre-sd).
 
 | ID | Entrada / acción | Resultado esperado | Nivel y módulo previsto |
 |---|---|---|---|
@@ -102,8 +102,8 @@ resultado obtenido es **pendiente** en los 18 casos.
 No ejecutar en esta fase. Primero implementar los módulos y pruebas; después
 documentar comandos exactos en contenedores para preparación, migración,
 importación del catálogo, importación/generación CMDB, demo, pruebas dirigidas,
-validación de integridad/grafos y persistencia. Los comandos nuevos aún no existen.
-No añadir `generate_cmdb` al README como si fuera un comando disponible.
+validación de integridad/grafos y persistencia. `generate_cmdb` y
+`seed_service_desk` existen desde `f15deb0` y están documentados en el README.
 
 Para cada ejecución real registrar: ID, comando exacto, parámetros/semilla,
 entrada controlada, resultado esperado, resultado obtenido, código de salida,
@@ -128,3 +128,44 @@ las evidencias históricas no se modifican para aparentar ejecuciones nuevas.
 ## Estado parcial V5 — modelo CMDB
 
 ClasificacionCI/UbicacionCI/CI/TipoRelacionCI/RelacionCI/ServicioCI y migración preparados. Check y revisión de migraciones son controles ligeros, no SD-P04 ni pruebas de ciclos. Resultados reales y limitación PostgreSQL/original en [FASE_CMDB](evidencias/FASE_CMDB.md). La taxonomía adicional sigue sin fuente.
+
+## Estado de ejecución (cierre SD)
+
+Fecha: 2026-10-29. Commit `f15deb0`. Evidencia: [FASE_CIERRE_SD](evidencias/FASE_CIERRE_SD.md).
+Bloques A y B1 del harness ejecutados con EXIT=0. La suite completa
+`python manage.py test tests --keepdb --parallel 1` (188 tests descubiertos)
+**se inició pero no concluyó**: el host se congeló y se reinició. No hay
+resultado final de la suite; ningún escenario se marca FALLA por ese motivo.
+
+Estados: **VERIFICADA** = resultado real observado en el bloque B1;
+**PARCIAL** = parte verificada por B1, resto solo en la suite no concluida;
+**IMPLEMENTADA / EJECUCIÓN FINAL NO COMPLETADA** = test existente sin resultado
+final por el congelamiento del host durante la suite de 188 tests.
+
+| ID | Test / control | Resultado real | Estado |
+|---|---|---|---|
+| SD-P01 | `test_SD_P01_autenticacion_logout_inactivo_y_rechazo_sin_permiso` | Login host 200, CSS 200, anónimo 302 | PARCIAL (logout/inactivo/sin permiso: ejecución final no completada) |
+| SD-P02 | `test_SD_P02_catalogo_12_46_e_importacion_repetible` + probe B1 | N1=12, N2=46; 2ª importación 0 creados | VERIFICADA (operativa) |
+| SD-P03 | `test_SD_P03_*` + `generate_cmdb --count 5000 --seed 2026` ×2 | 5000 CI, 510 relaciones, 100 vínculos; 2ª: 0/0/0, 5000 conservados | VERIFICADA (operativa) |
+| SD-P04 | `test_SD_P04_jerarquia_cmdb_padre_inexistente_y_ciclos` | — | IMPLEMENTADA / EJECUCIÓN FINAL NO COMPLETADA |
+| SD-P05 | `test_SD_P05_crear_ticket_valido_y_referencias_invalidas` | — | IMPLEMENTADA / EJECUCIÓN FINAL NO COMPLETADA |
+| SD-P06 | `test_SD_P06_colas_por_rol_y_usuario_acceso_permitido_y_denegado` | — | IMPLEMENTADA / EJECUCIÓN FINAL NO COMPLETADA |
+| SD-P07 | `test_SD_P07_dos_agentes_toman_el_mismo_ticket_solo_uno_gana` | — | IMPLEMENTADA / EJECUCIÓN FINAL NO COMPLETADA |
+| SD-P08 | `test_SD_P08_transferencia_historial_destino_y_adjuntos` | — | IMPLEMENTADA / EJECUCIÓN FINAL NO COMPLETADA |
+| SD-P09 | `test_SD_P09_siete_procesos_ruta_completa_y_transicion_invalida` | Demo: 7 procesos con ≥5 escenarios, 18 estados | IMPLEMENTADA / EJECUCIÓN FINAL NO COMPLETADA (datos demo verificados) |
+| SD-P10 | `test_SD_P10_cambio_sin_aprobacion_y_autoaprobacion_rechazados` | — | IMPLEMENTADA / EJECUCIÓN FINAL NO COMPLETADA |
+| SD-P11 | `test_SD_P11_eventos_E0_E3_e_incidente_sin_duplicar` | — | IMPLEMENTADA / EJECUCIÓN FINAL NO COMPLETADA |
+| SD-P12 | `test_SD_P12_categorias_I0_I6_y_regla_complementaria` | — | IMPLEMENTADA / EJECUCIÓN FINAL NO COMPLETADA |
+| SD-P13 | `test_SD_P13_incidente_problema_cambio` | — | IMPLEMENTADA / EJECUCIÓN FINAL NO COMPLETADA |
+| SD-P14 | `test_SD_P14_ci_a_servicios_y_ciclos` | Grafo de impacto HTTP 200 (42.9 ms) | IMPLEMENTADA / EJECUCIÓN FINAL NO COMPLETADA |
+| SD-P15 | `test_SD_P15_cierre_sin_resolucion_reapertura_y_bitacora` | — | IMPLEMENTADA / EJECUCIÓN FINAL NO COMPLETADA |
+| SD-P16 | `test_SD_P16_filtros_y_paginacion_cmdb_y_tickets` + probe B1 | 8 consultas HTTP 200, 23.7–116.2 ms sobre 5,000 CI | VERIFICADA (medición); aserciones del test: ejecución final no completada |
+| SD-P17 | `test_SD_P17_indicadores_con_datos_controlados` | — | IMPLEMENTADA / EJECUCIÓN FINAL NO COMPLETADA |
+| SD-P18 | `scripts/verify-persistence.sh` | No ejecutado en esta fase | IMPLEMENTADA / EJECUCIÓN FINAL NO COMPLETADA |
+| SD-X08 | `seed_service_desk` ×2 | 8 colas, 37 escenarios, 39 tickets, 13 membresías, 5 FAQ; 2ª: 0 nuevos | VERIFICADA (operativa) |
+| PP2-P01–P11 | Regresiones en la misma suite (tras cambio de `Usuario.rol`) | — | IMPLEMENTADA / EJECUCIÓN FINAL NO COMPLETADA |
+
+SD-X01–SD-X07: cubiertos parcialmente por tests de FAQ, administración, bajas,
+reclasificación y grafo ITSM dentro de la misma suite; sin resultado final.
+Para completar el cierre basta ejecutar la suite en un equipo con más recursos
+(o por módulos) y registrar aquí el resultado sin alterar lo anterior.
